@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts */
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource-variable/inter-tight";
+
+:root {
+  --void: #080b14; /* page background */
+  --panel: #0f1524; /* cards, modal surface */
+  --line: #1e2a42; /* hairlines, dot grid, idle edges */
+  --flow: #38e0d4; /* teal — data moving, active node */
+  --gate: #f5a524; /* amber — validation, human-in-the-loop */
+  --fault: #ff5d73; /* coral — retry / rejection loops ONLY */
+  --text: #e6edf7;
+  --muted: #7c8ba6;
+}
+
+@theme {
+  --color-void: var(--void);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-flow: var(--flow);
+  --color-gate: var(--gate);
+  --color-fault: var(--fault);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: "Inter Tight Variable", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  position: relative;
+  min-height: 100vh;
+}
+
+.dot-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.04;
+}
+
+.mono-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+::selection {
+  background: var(--flow);
+  color: var(--void);
+}
+
+:focus-visible {
+  outline: 2px solid var(--flow);
+  outline-offset: 2px;
+}
