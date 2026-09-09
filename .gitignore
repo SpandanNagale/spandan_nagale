@@ -16,6 +16,7 @@ dist-ssr
 # Claude Code local tooling (not part of the site)
 .claude
 skills-lock.json
+.superpowers
 
 # Editor directories and files
 .vscode/*
