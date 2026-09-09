@@ -1,12 +1,13 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config as loadEnv } from 'dotenv';
-import { runBuildKnowledge } from './knowledge/run';
 
 const SCRIPTS_DIR = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = resolve(SCRIPTS_DIR, '..');
 
 loadEnv({ path: resolve(ROOT, '.env.local') });
+
+const { runBuildKnowledge } = await import('./knowledge/run.js');
 
 try {
   const knowledgeBase = await runBuildKnowledge({
