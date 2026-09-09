@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-knowledge
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -21,14 +25,29 @@ jobs:
 
       - run: npm ci
 
+      - name: Read previous corpus_version
+        id: before
+        run: |
+          if [ -f public/knowledge.json ]; then
+            echo "version=$(node -p "require('./public/knowledge.json').corpus_version")" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm test
+
+      - run: npx tsc -b
+
       - run: npm run build:knowledge
         env:
           GITHUB_TOKEN: ${{ secrets.KNOWLEDGE_GITHUB_TOKEN }}
+          KNOWLEDGE_CONTEXT_WINDOW: '128000'
 
-      - name: Commit knowledge.json if changed
+      - name: Commit knowledge.json if corpus_version changed
         id: commit
         run: |
-          if ! git diff --quiet -- public/knowledge.json; then
+          NEW_VERSION=$(node -p "require('./public/knowledge.json').corpus_version")
+          if [ "$NEW_VERSION" != "${{ steps.before.outputs.version }}" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add public/knowledge.json
@@ -41,4 +60,6 @@ jobs:
 
       - name: Trigger Vercel deploy
         if: steps.commit.outputs.changed == 'true'
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: curl -f -X POST "$DEPLOY_HOOK_URL"
