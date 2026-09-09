@@ -1,7 +1,9 @@
 export class RepoNotFoundError extends Error {
-  constructor(public readonly repo: string) {
+  readonly repo: string;
+  constructor(repo: string) {
     super(`GitHub repo "${repo}" returned 404 — it may have been renamed, deleted, or made private.`);
     this.name = 'RepoNotFoundError';
+    this.repo = repo;
   }
 }
 
@@ -25,7 +27,7 @@ export type FetchFn = typeof fetch;
 
 const GITHUB_API = 'https://api.github.com';
 
-function authHeaders(token: string): HeadersInit {
+function authHeaders(token: string): Record<string, string> {
   return {
     Authorization: `Bearer ${token}`,
     Accept: 'application/vnd.github+json',

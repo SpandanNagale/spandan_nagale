@@ -43,7 +43,7 @@ describe('fetchRepoMeta', () => {
   });
 
   it('sends an authorization header with the token', async () => {
-    const fetchFn = vi.fn(async () =>
+    const fetchFn = vi.fn<FetchFn>(async () =>
       jsonResponse(200, {
         description: null,
         stargazers_count: 0,
@@ -51,7 +51,7 @@ describe('fetchRepoMeta', () => {
         default_branch: 'main',
       }),
     );
-    await fetchRepoMeta(fetchFn as unknown as FetchFn, 'owner/repo', 'secret-token');
+    await fetchRepoMeta(fetchFn, 'owner/repo', 'secret-token');
     const [, init] = fetchFn.mock.calls[0];
     expect((init as RequestInit).headers).toMatchObject({ Authorization: 'Bearer secret-token' });
   });
