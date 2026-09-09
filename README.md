@@ -17,7 +17,7 @@ A single-page portfolio showcasing four multi-agent systems, built as a static s
 of truth for a portfolio AI assistant (a separate, in-progress feature — see
 `docs/superpowers/specs/2026-09-10-portfolio-ai-assistant.md`). `npm run
 build:knowledge` reads them, enriches each project entry
-from the GitHub API (description, languages, README, file tree, named key
+from the GitHub API (description, languages, README, named key
 files), validates everything with Zod, and writes `public/knowledge.json` —
 the full corpus a future chat endpoint will load into its system prompt. It
 runs at build time only, never at request time, and fails loudly (non-zero

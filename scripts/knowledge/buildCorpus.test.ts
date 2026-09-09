@@ -18,7 +18,7 @@ const entry: ProjectEntry = {
 
 const enrichedNoGithub: EnrichedProject = {
   entry: { ...entry, repo: undefined },
-  enrichment: { meta: null, languages: null, tree: null, readme: null, keyFileContents: {} },
+  enrichment: { meta: null, languages: null, readme: null, keyFileContents: {} },
 };
 
 const enrichedWithGithub: EnrichedProject = {
@@ -26,7 +26,6 @@ const enrichedWithGithub: EnrichedProject = {
   enrichment: {
     meta: { description: 'A text-to-SQL agent', stars: 5, pushedAt: '2026-01-01T00:00:00Z', defaultBranch: 'main' },
     languages: { Python: 8000, HTML: 200 },
-    tree: [{ path: 'src', type: 'dir' }],
     readme: '# QueryPilot\nDetails here.',
     keyFileContents: { 'src/graph/validator.py': 'def validate(): ...' },
   },

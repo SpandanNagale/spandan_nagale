@@ -18,11 +18,6 @@ export interface LanguageBreakdown {
   [language: string]: number;
 }
 
-export interface TreeEntry {
-  path: string;
-  type: 'file' | 'dir';
-}
-
 export type FetchFn = typeof fetch;
 
 const GITHUB_API = 'https://api.github.com';
@@ -71,22 +66,6 @@ export async function fetchReadme(fetchFn: FetchFn, repo: string, token: string)
   const data = (await res.json()) as { content: string; encoding: string };
   if (data.encoding !== 'base64') throw new Error(`Unexpected README encoding for ${repo}: ${data.encoding}`);
   return Buffer.from(data.content, 'base64').toString('utf-8');
-}
-
-export async function fetchTree(
-  fetchFn: FetchFn,
-  repo: string,
-  defaultBranch: string,
-  token: string,
-): Promise<TreeEntry[]> {
-  const res = await githubGet(fetchFn, `${GITHUB_API}/repos/${repo}/git/trees/${defaultBranch}?recursive=1`, token);
-  if (res.status === 404) throw new RepoNotFoundError(repo);
-  if (!res.ok) throw new Error(`GitHub API error fetching tree for ${repo}: ${res.status} ${res.statusText}`);
-  const data = (await res.json()) as { tree: { path: string; type: string }[] };
-  return data.tree
-    .filter((entry) => entry.path.split('/').length <= 2)
-    .slice(0, 200)
-    .map((entry) => ({ path: entry.path, type: entry.type === 'tree' ? 'dir' : 'file' }));
 }
 
 export async function fetchFileContent(

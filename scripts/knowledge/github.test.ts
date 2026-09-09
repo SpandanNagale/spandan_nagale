@@ -4,7 +4,6 @@ import {
   fetchRepoMeta,
   fetchLanguages,
   fetchReadme,
-  fetchTree,
   fetchFileContent,
   type FetchFn,
 } from './github';
@@ -79,22 +78,6 @@ describe('fetchReadme', () => {
   it('returns an empty string when there is no README, without throwing', async () => {
     const fetchFn = vi.fn(async () => jsonResponse(404, {})) as unknown as FetchFn;
     expect(await fetchReadme(fetchFn, 'owner/repo', 'token')).toBe('');
-  });
-});
-
-describe('fetchTree', () => {
-  it('filters to two levels deep and caps at 200 entries', async () => {
-    const shallowEntries = Array.from({ length: 250 }, (_, i) => ({ path: `src/file${i}.ts`, type: 'blob' }));
-    const tooDeep = { path: 'src/nested/too/deep.ts', type: 'blob' };
-    const fetchFn = vi.fn(async () => jsonResponse(200, { tree: [...shallowEntries, tooDeep] })) as unknown as FetchFn;
-    const tree = await fetchTree(fetchFn, 'owner/repo', 'main', 'token');
-    expect(tree.length).toBe(200);
-    expect(tree.every((entry) => entry.path.split('/').length <= 2)).toBe(true);
-  });
-
-  it('throws RepoNotFoundError on 404', async () => {
-    const fetchFn = vi.fn(async () => jsonResponse(404, {})) as unknown as FetchFn;
-    await expect(fetchTree(fetchFn, 'owner/missing', 'main', 'token')).rejects.toThrow(RepoNotFoundError);
   });
 });
 

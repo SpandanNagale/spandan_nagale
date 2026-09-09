@@ -1,12 +1,11 @@
 import { createHash } from 'node:crypto';
 import type { ProjectEntry } from './schema';
-import type { RepoMeta, LanguageBreakdown, TreeEntry } from './github';
+import type { RepoMeta, LanguageBreakdown } from './github';
 import { estimateTokens } from './tokenEstimate';
 
 export interface ProjectEnrichment {
   meta: RepoMeta | null;
   languages: LanguageBreakdown | null;
-  tree: TreeEntry[] | null;
   readme: string | null;
   keyFileContents: Record<string, string>;
 }
