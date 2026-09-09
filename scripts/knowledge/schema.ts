@@ -21,7 +21,7 @@ export const ProjectEntrySchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/, 'slug must be lowercase-kebab-case'),
   name: z.string().min(1),
   repo: z.string().regex(/^[\w.-]+\/[\w.-]+$/, 'repo must be "owner/name"').optional(),
-  live_url: z.string().url().nullable().optional(),
+  live_url: z.url().nullable().optional(),
   status: ProjectStatusSchema,
   one_liner: z.string().min(1),
   stack: z.array(z.string().min(1)).min(1),
@@ -31,7 +31,7 @@ export const ProjectEntrySchema = z.object({
   metrics: z.array(MetricSchema).default([]),
   key_files: z.array(KeyFileSchema).default([]),
   talking_points: z.array(TalkingPointSchema).default([]),
-});
+}).strict();
 
 export const ProjectsYamlSchema = z.array(ProjectEntrySchema).min(1);
 
