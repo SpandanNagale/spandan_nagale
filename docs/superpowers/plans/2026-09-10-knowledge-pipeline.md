@@ -116,13 +116,22 @@ Edit `package.json`'s `"scripts"` block to:
 "scripts": {
   "dev": "vite",
   "build:knowledge": "tsx scripts/build-knowledge.ts",
-  "prebuild": "npm run build:knowledge",
   "build": "tsc -b && vite build",
   "test": "vitest run",
   "lint": "oxlint",
   "preview": "vite preview"
 }
 ```
+
+**Deviation from an earlier draft of this plan:** `build:knowledge` is
+deliberately NOT wired as a `prebuild` hook. npm's `prebuild` fires before
+*every* `npm run build`, including Vercel's production deploy build — that
+would force every Vercel deploy to need `GITHUB_TOKEN` and make a live GitHub
+API call, when the actual design (per the spec) is that the daily GitHub
+Action regenerates and commits `public/knowledge.json`, then triggers a
+Vercel deploy of the already-committed file. `build:knowledge` is invoked
+explicitly by name — from the GitHub Action (Task 8) and by a human running
+it locally — never implicitly by `npm run build`.
 
 - [ ] **Step 3: Create the vitest config**
 

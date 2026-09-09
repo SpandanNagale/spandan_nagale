@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build:knowledge": "tsx scripts/build-knowledge.ts",
-    "prebuild": "npm run build:knowledge",
     "build": "tsc -b && vite build",
     "test": "vitest run",
     "lint": "oxlint",
