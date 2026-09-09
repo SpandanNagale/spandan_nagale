@@ -1,17 +1,18 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { ProjectsYamlSchema, type ProjectEntry } from './schema';
 import {
   fetchRepoMeta,
   fetchLanguages,
   fetchReadme,
-  fetchTree,
   fetchFileContent,
   type FetchFn,
 } from './github';
 import { buildCorpus, type EnrichedProject, type ProjectEnrichment, type KnowledgeBase } from './buildCorpus';
-import { exceedsContextBudget, MODEL_CONTEXT_WINDOW_TOKENS, CONTEXT_WINDOW_BUDGET_RATIO } from './tokenEstimate';
+import { exceedsContextBudget, getModelContextWindowTokens, CONTEXT_WINDOW_BUDGET_RATIO } from './tokenEstimate';
 
+// A floor against an empty or one-line placeholder file — not a real content-quality check. A human authors this file, so this is a cheap guard, not validation.
 const MIN_ABOUT_LENGTH = 200;
 
 export interface BuildKnowledgeOptions {
@@ -49,16 +50,15 @@ async function enrichProject(
   fetchFn: FetchFn,
 ): Promise<EnrichedProject> {
   if (!entry.repo) {
-    return { entry, enrichment: { meta: null, languages: null, tree: null, readme: null, keyFileContents: {} } };
+    return { entry, enrichment: { meta: null, languages: null, readme: null, keyFileContents: {} } };
   }
   if (!token) {
     throw new Error(`GITHUB_TOKEN is required to enrich "${entry.slug}" (repo: ${entry.repo}). Set it in .env.local.`);
   }
 
   const meta = await fetchRepoMeta(fetchFn, entry.repo, token);
-  const [languages, tree, readme] = await Promise.all([
+  const [languages, readme] = await Promise.all([
     fetchLanguages(fetchFn, entry.repo, token),
-    fetchTree(fetchFn, entry.repo, meta.defaultBranch, token),
     fetchReadme(fetchFn, entry.repo, token),
   ]);
 
@@ -67,7 +67,7 @@ async function enrichProject(
     keyFileContents[file.path] = await fetchFileContent(fetchFn, entry.repo, file.path, token);
   }
 
-  const enrichment: ProjectEnrichment = { meta, languages, tree, readme, keyFileContents };
+  const enrichment: ProjectEnrichment = { meta, languages, readme, keyFileContents };
   return { entry, enrichment };
 }
 
@@ -83,12 +83,14 @@ export async function runBuildKnowledge(options: BuildKnowledgeOptions): Promise
   const knowledgeBase = buildCorpus(about, enrichedProjects);
 
   if (exceedsContextBudget(knowledgeBase.token_estimate)) {
-    const budget = Math.floor(MODEL_CONTEXT_WINDOW_TOKENS * CONTEXT_WINDOW_BUDGET_RATIO);
+    const contextWindow = getModelContextWindowTokens();
+    const budget = Math.floor(contextWindow * CONTEXT_WINDOW_BUDGET_RATIO);
     throw new Error(
-      `Corpus token_estimate (${knowledgeBase.token_estimate}) exceeds ${CONTEXT_WINDOW_BUDGET_RATIO * 100}% of the model context window (budget: ${budget} of ${MODEL_CONTEXT_WINDOW_TOKENS}). Trim content/projects.yaml or content/about.md.`,
+      `Corpus token_estimate (${knowledgeBase.token_estimate}) exceeds ${CONTEXT_WINDOW_BUDGET_RATIO * 100}% of the model context window (budget: ${budget} of ${contextWindow}). Trim content/projects.yaml or content/about.md.`,
     );
   }
 
+  mkdirSync(dirname(options.outputPath), { recursive: true });
   writeFileSync(options.outputPath, `${JSON.stringify(knowledgeBase, null, 2)}\n`, 'utf-8');
   return knowledgeBase;
 }

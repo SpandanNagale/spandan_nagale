@@ -1,10 +1,20 @@
-// Provisional until Phase 2 picks the exact Ollama Cloud model; override
-// via KNOWLEDGE_CONTEXT_WINDOW once that model's real context window is
-// known. Kept conservative (32K) so this fail-condition errs toward
-// catching an oversized corpus early rather than missing one.
-export const MODEL_CONTEXT_WINDOW_TOKENS = Number(process.env.KNOWLEDGE_CONTEXT_WINDOW ?? 32000);
+// 128,000 tokens matches common context windows for modern Ollama Cloud
+// models (e.g. gpt-oss, qwen3, llama3.1 all support 128K) and comfortably
+// fits this corpus (~44K tokens by this heuristic; a real tokenizer would
+// likely count higher, closer to 55-65K, since this heuristic under-counts
+// code and markdown). Override via KNOWLEDGE_CONTEXT_WINDOW once Phase 2
+// locks in the exact Ollama Cloud model and its real context window.
+const DEFAULT_MODEL_CONTEXT_WINDOW_TOKENS = 128000;
 
 export const CONTEXT_WINDOW_BUDGET_RATIO = 0.6;
+
+// Read lazily (a function, not a module-level constant) so the value always
+// reflects whatever is in process.env at call time — this makes the pipeline
+// immune to import-ordering bugs regardless of how future code imports this
+// module, rather than relying on callers loading .env before any import.
+export function getModelContextWindowTokens(): number {
+  return Number(process.env.KNOWLEDGE_CONTEXT_WINDOW ?? DEFAULT_MODEL_CONTEXT_WINDOW_TOKENS);
+}
 
 // Heuristic: ~4 characters per token for English prose. Good enough to
 // gate the 60% budget check; an exact tokenizer isn't worth a dependency
@@ -15,7 +25,7 @@ export function estimateTokens(text: string): number {
 
 export function exceedsContextBudget(
   tokenEstimate: number,
-  contextWindow: number = MODEL_CONTEXT_WINDOW_TOKENS,
+  contextWindow: number = getModelContextWindowTokens(),
 ): boolean {
   return tokenEstimate > contextWindow * CONTEXT_WINDOW_BUDGET_RATIO;
 }
