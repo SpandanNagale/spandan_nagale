@@ -35,8 +35,8 @@ describe('ProjectEntrySchema', () => {
     ).toThrow();
   });
 
-  it('rejects zero talking_points', () => {
-    expect(() => ProjectEntrySchema.parse({ ...validEntry, talking_points: [] })).toThrow();
+  it('allows zero talking_points (not every project has one yet)', () => {
+    expect(() => ProjectEntrySchema.parse({ ...validEntry, talking_points: [] })).not.toThrow();
   });
 
   it('rejects a malformed repo string', () => {
@@ -48,11 +48,12 @@ describe('ProjectEntrySchema', () => {
     expect(() => ProjectEntrySchema.parse(rest)).not.toThrow();
   });
 
-  it('defaults metrics and key_files to empty arrays when omitted', () => {
-    const { metrics, key_files, ...rest } = validEntry;
+  it('defaults metrics, key_files, and talking_points to empty arrays when omitted', () => {
+    const { metrics, key_files, talking_points, ...rest } = validEntry;
     const parsed = ProjectEntrySchema.parse(rest);
     expect(parsed.metrics).toEqual([]);
     expect(parsed.key_files).toEqual([]);
+    expect(parsed.talking_points).toEqual([]);
   });
 
   it('rejects an unknown status value', () => {

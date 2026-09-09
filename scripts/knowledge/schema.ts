@@ -30,9 +30,7 @@ export const ProjectEntrySchema = z.object({
     .min(80, 'design_rationale must be a real 3-6 sentence explanation, not a placeholder'),
   metrics: z.array(MetricSchema).default([]),
   key_files: z.array(KeyFileSchema).default([]),
-  talking_points: z
-    .array(TalkingPointSchema)
-    .min(1, 'each project needs at least one anticipated interview question'),
+  talking_points: z.array(TalkingPointSchema).default([]),
 });
 
 export const ProjectsYamlSchema = z.array(ProjectEntrySchema).min(1);
