@@ -1,0 +1,406 @@
+# Knowledge base — projects. Authoritative source for the portfolio
+# assistant; GitHub only enriches these entries (see scripts/build-knowledge.ts).
+
+- slug: keel
+  name: Keel
+  repo: SpandanNagale/Keel
+  live_url: https://qpjzctwb6nntdeaedg6zzr.streamlit.app
+  status: complete
+  one_liner: >
+    A specification agent that turns a vague project prompt into a rigorous one
+    by interrogating the ambiguities instead of guessing at them.
+  stack: [Streamlit, Python, Ollama Cloud, LLM orchestration]
+  design_rationale: >
+    Most prompt-improvement tools do a one-shot rewrite: you hand them something
+    vague and they hand back something longer, having silently invented every
+    detail you left out. Keel refuses to do that. It reads a prompt, identifies
+    what is genuinely underspecified — most often the input format and the
+    expected output — and asks about those specifically, offering
+    recommendations where a sensible default exists, then loops on confirmation
+    before producing the final markdown spec.
+    The harder decision was scope. The first version also generated project
+    ideas and justified recommended tech stacks; both were cut. Three mediocre
+    features read worse than one that works, and the clarification loop was the
+    only part that solved a problem the user couldn't solve faster themselves.
+    An earlier Python CLI build was abandoned entirely in favor of the Streamlit
+    rewrite — a CLI meant nobody would ever try it.
+    Because it's publicly deployed with a server-side key, it ships with
+    per-session and daily caps plus an optional bring-your-own-key field.
+  metrics:
+    - label: Scope
+      value: One feature, deliberately
+  key_files: []
+  talking_points:
+    - q: Why ask questions instead of just writing a better prompt?
+      a: >
+        Because the missing information isn't recoverable. If a prompt doesn't
+        say what the input looks like, no amount of rewriting produces that —
+        it just produces a confident guess the user then has to detect and
+        undo. Asking is cheaper than silently being wrong.
+    - q: Why did you cut two of the three features?
+      a: >
+        The idea-generation mode and the tech-stack justifier were both things
+        a user could get elsewhere in thirty seconds. The clarification loop
+        wasn't. Cutting them meant the one remaining feature got the attention
+        it needed to actually be good.
+
+- slug: ml-agent
+  name: ML-Agent (ML Pipeline Architect)
+  repo: SpandanNagale/ML-Agent
+  live_url: null
+  status: complete
+  one_liner: >
+    A multi-agent system that builds, trains, and self-heals an end-to-end ML
+    pipeline from a single problem statement, running on local LLMs.
+  stack: [Ollama, multi-agent orchestration, Python, scikit-learn]
+  design_rationale: >
+    The interesting problem here isn't code generation, it's recovery. An agent
+    that writes a training script and hands it over is trivial; an agent that
+    runs the script, reads the traceback, diagnoses whether the failure was a
+    schema assumption, a dtype issue, or a genuinely bad modeling choice, and
+    then fixes the right layer, is not. The self-healing loop is the project.
+    Running it on local models via Ollama rather than a frontier API was a
+    constraint that improved the design. Local models drift and hallucinate more
+    under long, loosely-structured prompts, which forced hard structure on the
+    control flow — narrow agent responsibilities, explicit state, validated
+    handoffs — rather than relying on a strong model to hold a vague plan
+    together.
+  metrics: []
+  key_files: []
+  talking_points: []
+
+- slug: datasleuth
+  name: DataSleuth
+  repo: SpandanNagale/DataSleuth
+  live_url: null
+  status: complete
+  one_liner: >
+    A fully local multi-agent data analyst with a Critic that independently
+    re-executes generated code to catch hallucinated results.
+  stack: [LangGraph, Ollama, qwen3:14b, qwen2.5-coder:14b, FastAPI, SSE, SQLite]
+  design_rationale: >
+    LLM data-analysis agents fail in a specific, dangerous way: the model writes
+    analysis code, reports a plausible number, and the number is wrong — either
+    because the code silently errored or because the model narrated a result it
+    never actually computed. Self-critique prompting doesn't catch this, because
+    the same model that hallucinated the result is being asked whether it
+    hallucinated the result.
+    So the Critic node doesn't review the reasoning, it re-executes the code
+    independently and compares. Verification is grounded in execution rather
+    than in a second opinion from the same weights.
+    LangGraph with SQLite checkpointing handles the state machine and makes runs
+    resumable; FastAPI with SSE streams intermediate steps so the user watches
+    the analysis happen rather than staring at a spinner. Whole thing runs on an
+    RTX 5070 with no external API calls, which matters for anyone who can't send
+    their data to a vendor.
+  metrics:
+    - label: External API calls
+      value: Zero — fully local
+  key_files: []
+  talking_points:
+    - q: Why not just let the model check its own work?
+      a: >
+        Because self-critique shares the failure mode it's meant to catch. If
+        the model believed a wrong number the first time, asking it to review
+        the number gets you the same belief with more confidence attached. The
+        Critic re-runs the code — execution is a ground truth the model can't
+        talk its way around.
+    - q: Why local models instead of GPT-4-class ones?
+      a: >
+        Data analysis usually means the data is sensitive. A system that can't
+        run on-premise doesn't get used for the cases that matter most.
+
+- slug: querypilot
+  name: QueryPilot
+  repo: SpandanNagale/QueryPilot
+  live_url: null
+  status: complete
+  one_liner: >
+    A text-to-SQL agent that validates every generated statement at the AST
+    level and gates destructive operations behind human confirmation.
+  stack: [LangGraph, sqlglot, SQLite, Python]
+  design_rationale: >
+    Text-to-SQL safety is usually handled with a regex blocklist for DROP and
+    DELETE, which is security theater — comments, casing, nested statements and
+    string literals all defeat it. QueryPilot parses every generated statement
+    into a sqlglot AST and reasons about what the query structurally does,
+    not what it looks like.
+    Destructive operations don't get blocked outright, because a data tool that
+    can't write is half a tool. They get routed through a LangGraph interrupt
+    that surfaces an FK-aware preview of exactly what a delete would cascade to,
+    and waits for explicit human confirmation. The user keeps the capability and
+    loses the ability to trigger it by accident.
+    Tested against 40 adversarial safety cases — obfuscated destructive queries,
+    injection attempts, multi-statement payloads — with a 100% pass rate. Built
+    against a real dataset from the family cold-drinks distribution business
+    rather than a toy schema, which is where the FK cascade problem showed up in
+    the first place.
+  metrics:
+    - label: Adversarial safety tests passed
+      value: 40/40
+  key_files: []
+  talking_points:
+    - q: Why sqlglot instead of prompting the model to be careful?
+      a: >
+        Prompted safety is a probability, not a guarantee, and it degrades under
+        adversarial input. Parsing gives a deterministic answer to "does this
+        statement delete rows" that doesn't depend on the model cooperating.
+
+- slug: docintel
+  name: DocIntel
+  repo: SpandanNagale/DocIntel
+  live_url: null
+  status: complete
+  one_liner: >
+    OCR-free extraction from Indian financial documents using a fine-tuned Donut
+    model, with a learned router deciding when to use it.
+  stack: [Donut, PyTorch, LightGBM, Python]
+  design_rationale: >
+    The premise was that an OCR-free vision-language model would beat a
+    traditional OCR pipeline on Indian invoices, where layout variance and
+    multilingual text break conventional extraction. It didn't — the fine-tuned
+    Donut model scored 51.0% against the OCR baseline's 63.6% overall.
+    The result underneath that headline is more useful: Donut wins specifically
+    on free-text fields, where OCR's line-segmentation assumptions fall apart,
+    and loses on structured numeric fields where OCR is nearly exact. So rather
+    than picking a winner, the system routes per-field with a LightGBM
+    classifier, using each approach where it's actually stronger.
+    Trained on real invoice data from the family business, and kept at ~683ms
+    p50 latency so it's viable in a document-processing pipeline rather than
+    just a notebook result.
+  metrics:
+    - label: Donut accuracy (overall)
+      value: 51.0%
+    - label: OCR baseline (overall)
+      value: 63.6%
+    - label: p50 latency
+      value: ~683ms
+  key_files: []
+  talking_points:
+    - q: Your fine-tuned model lost to the baseline. Why is this on your portfolio?
+      a: >
+        Because the honest version of the result is the useful one. The
+        interesting finding wasn't "Donut is better" — it was that the two
+        approaches fail on disjoint field types, which is what makes routing
+        between them worth building. A portfolio that only contains wins is a
+        portfolio where the negative results got buried.
+
+- slug: marathigpt
+  name: MarathiGPT
+  repo: SpandanNagale/Marathi-GPT
+  live_url: null
+  status: complete
+  one_liner: >
+    A 54M-parameter GPT pretrained from scratch on Marathi with a custom
+    tokenizer that's 4.8x more token-efficient than GPT-4 on the language.
+  stack: [PyTorch, SentencePiece, transformer pretraining]
+  design_rationale: >
+    For Indic languages the binding constraint usually isn't model capacity,
+    it's tokenization. GPT-4's tokenizer shreds Devanagari into fragments, so
+    the same Marathi sentence costs several times more tokens than its English
+    equivalent — which means worse context utilization, higher inference cost,
+    and less semantic signal per token during training.
+    So the project started at the tokenizer: a custom 32k SentencePiece
+    vocabulary trained on Marathi, achieving 4.8x better token efficiency than
+    GPT-4 on the same text. The transformer was then pretrained from scratch on
+    top of it, at 54M parameters, with 22.9M (nano) and 42.1M (small) variants
+    to see how the efficiency gain interacts with scale.
+    Small models by design — the point was to demonstrate the tokenizer thesis
+    end-to-end on a single consumer GPU, not to compete with anything.
+  metrics:
+    - label: Token efficiency vs GPT-4 on Marathi
+      value: 4.8x
+    - label: Model sizes trained
+      value: 22.9M / 42.1M / 54M
+  key_files: []
+  talking_points:
+    - q: Why build the tokenizer instead of fine-tuning an existing model?
+      a: >
+        Fine-tuning inherits the tokenizer, and the tokenizer is the actual
+        bottleneck. You can't fine-tune your way out of spending 5x the tokens
+        to say the same sentence.
+
+- slug: veritas
+  name: Veritas
+  repo: SpandanNagale/Veritas
+  live_url: null
+  status: complete
+  one_liner: >
+    A GraphRAG engine combining vector and graph retrieval, containerized with
+    GPU passthrough and running fully local.
+  stack: [ChromaDB, Neo4j, Ollama, Gemma, Docker Compose]
+  design_rationale: >
+    Vector retrieval is good at "find me something similar" and bad at "how are
+    these two things connected" — multi-hop questions where the answer lives in
+    a relationship rather than in any single chunk. Veritas pairs ChromaDB for
+    semantic recall with a Neo4j entity graph for relational traversal, so both
+    query shapes have a path to an answer.
+    The deployment side was the part that took real work: Docker Compose with
+    GPU passthrough to keep Ollama inference on the local card while Neo4j and
+    Chroma run alongside it, reproducibly, on one machine.
+  metrics: []
+  key_files: []
+  talking_points: []
+
+- slug: self-healing-rag
+  name: Self-Healing Hybrid RAG
+  repo: SpandanNagale/self-healing-rag
+  live_url: null
+  status: complete
+  one_liner: >
+    A hybrid retrieval pipeline that measures its own quality with RAGAS and
+    repairs its index in the background when it degrades.
+  stack: [LangGraph, BM25, dense retrieval, RRF, cross-encoder reranking, RAGAS]
+  design_rationale: >
+    Retrieval quality decays after deployment — documents change, the corpus
+    grows, embeddings go stale — and most RAG systems have no idea it's
+    happening because nothing measures them after the demo.
+    The retrieval stack itself is conventional and deliberate: dense plus BM25
+    fused with reciprocal rank fusion to cover both semantic and lexical
+    matching, then a cross-encoder rerank on the fused candidates to buy
+    precision at the top. The part worth talking about is the layer above it —
+    RAGAS evaluation running against the live system, and a background job that
+    heals the index when scores drop, instead of waiting for a user to complain.
+  metrics: []
+  key_files: []
+  talking_points: []
+
+- slug: crewai-research-pipeline
+  name: CrewAI Research Pipeline
+  repo: SpandanNagale/crewai-research-pipeline
+  live_url: null
+  status: complete
+  one_liner: >
+    A four-agent research system — Planner, Researcher, Writer, Critic — with
+    LLM-as-Judge scoring and streamed intermediate output.
+  stack: [CrewAI, ChromaDB, SSE, Python]
+  design_rationale: >
+    Splitting research into Planner, Researcher, Writer, and Critic roles keeps
+    each agent's context narrow enough to stay reliable, and makes the failure
+    visible when it happens — you can see which stage produced the bad output
+    instead of debugging one long opaque generation.
+    The Critic runs an LLM-as-Judge pass over the draft rather than the pipeline
+    simply terminating on the Writer's first output, and SSE streaming exposes
+    every intermediate stage to the user, which turns a black box into something
+    inspectable. This was later extended into an Enterprise AI Research Agent
+    for a take-home assignment.
+  metrics: []
+  key_files: []
+  talking_points:
+    - q: Isn't LLM-as-Judge just the same model grading itself?
+      a: >
+        Largely, yes — that's the known weakness, and it's why the Critic here
+        scores drafts rather than gating anything destructive. DataSleuth uses
+        execution-based verification precisely because judgment-based
+        verification wasn't strong enough for that use case.
+
+- slug: jarvis
+  name: JARVIS
+  repo: SpandanNagale/JARVIS
+  live_url: null
+  status: complete
+  one_liner: >
+    A fully local voice assistant — wake word, speech recognition, LLM, tools,
+    memory, screen vision, and speech synthesis — with nothing leaving the
+    machine.
+  stack: [openWakeWord, faster-whisper large-v3-turbo, Qwen3:14b, Ollama, Piper TTS, ChromaDB, qwen2.5vl:7b]
+  design_rationale: >
+    Every commercial voice assistant streams your microphone to someone else's
+    servers. This one doesn't: openWakeWord listens for "hey jarvis" locally,
+    faster-whisper large-v3-turbo transcribes, Qwen3:14b reasons, Piper
+    synthesizes speech, and ChromaDB holds conversational memory — all on one
+    consumer GPU.
+    The engineering constraint is latency budget. A voice loop feels broken past
+    roughly two seconds, and there are five sequential stages competing for that
+    window, so model selection at each stage was a latency-versus-quality
+    decision rather than a pick-the-best-model decision. It also has tool access
+    (DuckDuckGo, GitHub, Wikipedia) and screen vision via qwen2.5vl:7b, so it
+    can answer questions about what's currently on the display.
+  metrics: []
+  key_files: []
+  talking_points: []
+
+- slug: contextlens
+  name: ContextLens
+  repo: SpandanNagale/Context_lense
+  live_url: https://context-lense.vercel.app
+  status: complete
+  one_liner: >
+    A deployed tool that measures how context window size affects answer quality
+    when querying a codebase.
+  stack: [Next.js 15, TypeScript, Groq, GitHub API]
+  design_rationale: >
+    "More context is better" is assumed more often than it's measured.
+    ContextLens tests it directly on codebases — varying how much of a repo goes
+    into the window and measuring what happens to answer quality, which
+    surfaces the point where additional context stops helping and starts
+    diluting.
+    Built as a take-home assignment for Open Gigantic, and the one project in
+    the portfolio that's a deployed TypeScript/Next.js app rather than a local
+    Python system.
+  metrics: []
+  key_files: []
+  talking_points: []
+
+- slug: assay
+  name: Assay
+  repo: SpandanNagale/Assay
+  live_url: null
+  status: archived
+  one_liner: >
+    An LLM evaluation harness with bootstrap confidence intervals and judge
+    calibration.
+  stack: [Python, statistical evaluation]
+  design_rationale: >
+    Most LLM eval reports a single accuracy number on a small test set and
+    treats it as fact, when the sample is usually too small for the difference
+    between two systems to mean anything. Assay adds bootstrap confidence
+    intervals so a reported delta comes with an uncertainty range, and
+    calibrates the judge model rather than assuming its scores are trustworthy.
+    It's archived deliberately. The statistics were sound but the tool was too
+    complex to actually use, which is a design failure regardless of how correct
+    the internals are. The repo stays public because the underlying work is
+    real, and the eval discipline from it now backs the portfolio assistant's
+    grounding test suite.
+  metrics: []
+  key_files: []
+  talking_points:
+    - q: Why keep an archived project on your portfolio?
+      a: >
+        Because the reason it was archived is a real engineering lesson — a
+        correct tool nobody can use isn't a finished tool. Hiding it would just
+        mean pretending every project landed.
+
+- slug: sieve
+  name: Sieve
+  repo: SpandanNagale/Sieve
+  live_url: null
+  status: complete
+  one_liner: >
+    Two-stage invoice anomaly detection — unsupervised ensemble first, then a
+    weakly-supervised classifier trained on its output.
+  stack: [Isolation Forest, LOF, LightGBM, SHAP, Streamlit, scikit-learn]
+  design_rationale: >
+    Anomaly detection on invoices has no labels to start from, so stage one is
+    unsupervised — Isolation Forest and LOF over invoice-level features
+    (quantity, value, SKU count, customer behavior), with seasonal decomposition
+    so that legitimate seasonal spikes don't get flagged as anomalies. Single
+    detectors were rejected; each catches a different anomaly shape and neither
+    covers the space alone.
+    Stage two converts that into supervision cheaply: 150 hand-labeled invoices
+    plus roughly 2000 weak labels derived from stage one, used to train a
+    LightGBM classifier that outputs both a flag and a probability. SHAP
+    explains each flag, because an anomaly score nobody can interpret doesn't
+    get acted on. Evaluated with bootstrap confidence intervals on 500K+
+    transactions from the Online Retail dataset.
+    Deliberately the non-LLM project in the portfolio — classical ML with
+    evaluation rigor, to show the range isn't only agents.
+  metrics: []
+  key_files: []
+  talking_points:
+    - q: Why weak supervision instead of labeling more data?
+      a: >
+        Hand-labeling invoices is slow and the class is rare, so a purely
+        supervised approach would spend most of its labeling budget on normal
+        invoices. Bootstrapping labels from the unsupervised stage concentrates
+        the manual effort where it changes the model.
