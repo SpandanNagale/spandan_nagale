@@ -5,7 +5,7 @@ import {
   CORPUS_VERSION,
   CORPUS_TOKEN_ESTIMATE,
 } from './assembleMessages';
-import { SYSTEM_PROMPT_PREFIX } from './systemPrompt';
+import { SYSTEM_PROMPT_PREFIX, JD_SYSTEM_PROMPT_PREFIX } from './systemPrompt';
 
 describe('SYSTEM_MESSAGE', () => {
   it('leads with the static prompt prefix (so a provider prefix-cache can hit it)', () => {
@@ -39,5 +39,16 @@ describe('assembleMessages', () => {
       { role: 'assistant', content: 'reply' },
       { role: 'user', content: 'second' },
     ]);
+  });
+
+  it('uses the JD system prompt in jd mode, keeping the same corpus', () => {
+    const chat = assembleMessages([{ role: 'user', content: 'x' }], 'chat')[0].content;
+    const jd = assembleMessages([{ role: 'user', content: 'x' }], 'jd')[0].content;
+    expect(jd.startsWith(JD_SYSTEM_PROMPT_PREFIX)).toBe(true);
+    expect(jd).not.toBe(chat);
+    expect(jd).toContain('OUTPUT CONTRACT');
+    // same corpus block appended to both
+    const corpusOf = (m: string, prefix: string) => m.slice(prefix.length);
+    expect(corpusOf(jd, JD_SYSTEM_PROMPT_PREFIX)).toBe(corpusOf(chat, SYSTEM_PROMPT_PREFIX));
   });
 });

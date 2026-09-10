@@ -71,6 +71,23 @@ body {
   text-transform: uppercase;
 }
 
+/* Brief highlight when a citation chip scrolls its project card into view. */
+.citation-flash {
+  animation: citation-flash 1.4s ease-out;
+}
+
+@keyframes citation-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    border-color: var(--line);
+  }
+  15% {
+    box-shadow: 0 0 0 2px var(--flow);
+    border-color: var(--flow);
+  }
+}
+
 ::selection {
   background: var(--flow);
   color: var(--void);

@@ -5,7 +5,13 @@ import {
   CORPUS_TOKEN_ESTIMATE,
 } from './_lib/assembleMessages';
 import { checkRateLimit } from './_lib/ratelimit';
-import { openOllamaStream, parseNdjson, OLLAMA_MODEL } from './_lib/ollamaStream';
+import {
+  openOllamaStream,
+  parseNdjson,
+  OLLAMA_MODEL,
+  MAX_OUTPUT_TOKENS,
+  JD_MAX_OUTPUT_TOKENS,
+} from './_lib/ollamaStream';
 import { sse, extractCitations } from './_lib/sse';
 import { looksLikeRefusal, logRefusal } from './_lib/refusalLog';
 
@@ -37,7 +43,7 @@ export default async function handler(req: Request): Promise<Response> {
   const rawBody = await req.text();
   const validation = validateChatRequest(rawBody);
   if (!validation.ok) return jsonError(validation.message, validation.status);
-  const { messages, session_id } = validation.data;
+  const { messages, session_id, mode } = validation.data;
 
   const rl = await checkRateLimit(clientIp(req));
   if (!rl.allowed) {
@@ -63,7 +69,12 @@ export default async function handler(req: Request): Promise<Response> {
       const emitted = new Set<string>();
 
       try {
-        const body = await openOllamaStream(assembleMessages(messages), apiKey, abort.signal);
+        const body = await openOllamaStream(
+          assembleMessages(messages, mode),
+          apiKey,
+          abort.signal,
+          mode === 'jd' ? JD_MAX_OUTPUT_TOKENS : MAX_OUTPUT_TOKENS,
+        );
 
         for await (const chunk of parseNdjson(body)) {
           const delta = chunk.message?.content ?? '';

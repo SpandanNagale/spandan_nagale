@@ -64,10 +64,33 @@ system prompt is committed on purpose; there are no prompt-secrecy defenses.
   trim the corpus (much of it is full README dumps) or switch `OLLAMA_MODEL`.
 - **Guards:** per-IP sliding window via Upstash Redis (10 / 10 min, 40 / day),
   15-user-turn per-conversation cap, `num_predict` 700, request bodies capped
-  at 2 KB and messages at 1000 chars. Rate limiting is a no-op when
+  at 16 KB and messages at 8000 chars (headroom for the JD matcher, which
+  sends a pasted job description as one message). Rate limiting is a no-op when
   `UPSTASH_REDIS_REST_URL` / `_TOKEN` are unset (local dev) — production must
   set them. Refusals (`{question, timestamp, session_id}`) are pushed to a
   capped Redis list for a future backlog digest.
+
+### Chat UI — the assistant panel
+
+`AssistantDock` mounts a fixed launcher (bottom-right) that opens `ChatPanel`,
+a slide-in dialog with two tabs:
+
+- **Chat** streams answers from `/api/chat`. Every settled answer runs through
+  `src/lib/citations.ts` in the browser: citation tokens become a `SOURCES`
+  row of chips (on-page projects scroll to and flash their card; the other ten
+  link out), and any claim-bearing sentence that arrived *without* a citation
+  is stripped before render — a conservative last-resort guard, unit-tested in
+  `src/lib/citations.test.ts`. A `TelemetryStrip` shows what the edge function
+  reported for the last turn (model, TTFT, tokens, prompt-cache hit/miss,
+  context used).
+- **JD Match** (`JDMatcher`) sends a pasted job description and asks for a
+  single JSON object, validated with Zod (`src/lib/jdMatch.ts`). It retries
+  once on a schema miss, then falls back to showing the raw reply. Gaps are a
+  required field, rendered in coral, never dropped.
+
+Local dev: `vite-plugin-dev-api.ts` adapts `api/chat.ts` onto Vite's dev
+server so `npm run dev` serves `/api/chat` too (it reads `.env.local`). It is
+`apply: 'serve'` only — production still runs the real edge function.
 
 ## Structure
 

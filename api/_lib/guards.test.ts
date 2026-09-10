@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { validateChatRequest, MAX_MESSAGE_CHARS, MAX_SESSION_TURNS } from './guards';
+import {
+  validateChatRequest,
+  MAX_BODY_BYTES,
+  MAX_MESSAGE_CHARS,
+  MAX_SESSION_TURNS,
+} from './guards';
 
 const okBody = (over: Record<string, unknown> = {}) =>
   JSON.stringify({
@@ -18,13 +23,20 @@ describe('validateChatRequest', () => {
     }
   });
 
-  it('rejects a body over 2 KB with 413', () => {
+  it('rejects a body over the byte cap with 413', () => {
     const big = JSON.stringify({
       session_id: 's',
-      messages: [{ role: 'user', content: 'x'.repeat(3000) }],
+      messages: [{ role: 'user', content: 'x'.repeat(MAX_BODY_BYTES + 100) }],
     });
     const r = validateChatRequest(big);
     expect(r).toMatchObject({ ok: false, status: 413 });
+  });
+
+  it('accepts a JD-matcher-sized single message (~7 KB)', () => {
+    const r = validateChatRequest(
+      okBody({ messages: [{ role: 'user', content: 'J'.repeat(7050) }] }),
+    );
+    expect(r.ok).toBe(true);
   });
 
   it('rejects invalid JSON with 400', () => {
@@ -47,6 +59,17 @@ describe('validateChatRequest', () => {
       okBody({ messages: [{ role: 'user', content: 'a'.repeat(MAX_MESSAGE_CHARS + 1) }] }),
     );
     expect(r).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it('defaults mode to "chat" and accepts an explicit "jd"', () => {
+    const def = validateChatRequest(okBody());
+    expect(def.ok && def.data.mode).toBe('chat');
+    const jd = validateChatRequest(okBody({ mode: 'jd' }));
+    expect(jd.ok && jd.data.mode).toBe('jd');
+  });
+
+  it('rejects an unknown mode with 400', () => {
+    expect(validateChatRequest(okBody({ mode: 'agent' }))).toMatchObject({ ok: false, status: 400 });
   });
 
   it('rejects an unknown role', () => {

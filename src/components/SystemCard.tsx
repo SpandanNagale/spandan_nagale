@@ -15,6 +15,7 @@ export default function SystemCard({ project, onOpen, reducedMotion }: SystemCar
   return (
     <motion.button
       type="button"
+      id={`card-${project.id}`}
       layoutId={`card-${project.id}`}
       onClick={() => onOpen(project.id)}
       onMouseEnter={() => setHovered(true)}

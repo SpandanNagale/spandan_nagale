@@ -6,7 +6,7 @@ const BULLETS = [
 
 export default function Experience() {
   return (
-    <section className="relative z-10 max-w-6xl mx-auto px-6 py-16">
+    <section id="experience" className="relative z-10 max-w-6xl mx-auto px-6 py-16 scroll-mt-24">
       <p className="mono-label text-muted mb-8">EXPERIENCE</p>
       <div className="flex flex-col gap-3 max-w-2xl">
         <div className="flex flex-col gap-1">

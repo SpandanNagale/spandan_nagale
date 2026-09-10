@@ -7,6 +7,7 @@ import SystemModal from './components/SystemModal';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
 import Footer from './components/Footer';
+import AssistantDock from './components/AssistantDock';
 import { projects } from './data/projects';
 import { useReducedMotion } from './hooks/useReducedMotion';
 
@@ -50,6 +51,8 @@ function App() {
           />
         )}
       </AnimatePresence>
+
+      <AssistantDock />
     </>
   );
 }

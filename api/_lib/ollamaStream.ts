@@ -7,6 +7,10 @@ const OLLAMA_URL = 'https://ollama.com/api/chat';
 
 export const OLLAMA_MODEL = process.env.OLLAMA_MODEL ?? 'gpt-oss:120b';
 export const MAX_OUTPUT_TOKENS = 700;
+// gpt-oss is a reasoning model: with the ~44K-token corpus in context it
+// spends a chunk of its budget "thinking" before any `content` token. The JD
+// matcher must emit a full JSON object after that, so it needs more room.
+export const JD_MAX_OUTPUT_TOKENS = 2500;
 
 export interface OllamaChunk {
   // `thinking` (reasoning models like gpt-oss) is deliberately not consumed —
@@ -28,6 +32,7 @@ export async function openOllamaStream(
   messages: Array<{ role: string; content: string }>,
   apiKey: string,
   signal: AbortSignal,
+  numPredict: number = MAX_OUTPUT_TOKENS,
 ): Promise<ReadableStream<Uint8Array>> {
   const res = await fetch(OLLAMA_URL, {
     method: 'POST',
@@ -42,7 +47,7 @@ export async function openOllamaStream(
       // Grounded factual Q&A — no chain-of-thought wanted. Reasoning models
       // (gpt-oss) may still emit some `thinking`; it's dropped downstream.
       think: false,
-      options: { num_predict: MAX_OUTPUT_TOKENS },
+      options: { num_predict: numPredict },
     }),
     signal,
   });
