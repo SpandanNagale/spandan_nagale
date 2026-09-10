@@ -21,6 +21,12 @@ describe('parseCitations', () => {
     expect(parseCitations('[[proj:]] [[about]] [[doc:resume]] [[ proj:x ]]')).toEqual([]);
   });
 
+  it('accepts single-bracket and fullwidth 【】 variants the model sometimes emits', () => {
+    expect(
+      parseCitations('Education is covered 【doc:about】 and QueryPilot [proj:querypilot] too.'),
+    ).toEqual(['doc:about', 'proj:querypilot']);
+  });
+
   it('returns [] when there are no tokens', () => {
     expect(parseCitations('No citations here.')).toEqual([]);
   });

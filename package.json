@@ -8,6 +8,8 @@
     "build:knowledge": "tsx scripts/build-knowledge.ts",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "eval": "tsx evals/run.ts",
+    "eval:digest": "tsx evals/refusal-digest.ts",
     "lint": "oxlint",
     "preview": "vite preview"
   },

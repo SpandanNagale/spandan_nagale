@@ -92,6 +92,54 @@ Local dev: `vite-plugin-dev-api.ts` adapts `api/chat.ts` onto Vite's dev
 server so `npm run dev` serves `/api/chat` too (it reads `.env.local`). It is
 `apply: 'serve'` only — production still runs the real edge function.
 
+## Evaluation — `npm run eval`
+
+`evals/cases.yaml` is ~58 cases across six categories: `grounded` (real
+project / bio questions), `refusal` (non-existent projects, out-of-corpus
+facts), `gap` (real skills he lacks), `offtopic`, `injection` (persona /
+prompt-extraction / fake-`SYSTEM:` attempts), and `comparison`. `npm run
+eval` puts each one to a running `/api/chat` — starting Vite in-process for
+the dev bridge unless `EVAL_TARGET_URL` points at a deployment — and grades
+the answer.
+
+Two layers:
+
+- **Deterministic assertions** (`evals/assertions.ts`, unit-tested) are the
+  blocking gate: required / forbidden citation tokens, `expect_refusal`
+  (contact email + a decline phrasing), citation-count ceilings for refusals,
+  `require_citation`, substring / regex checks, and a voice check that fails
+  first person used *as Spandan* ("I built X") while allowing the assistant to
+  say "I" about itself ("I can't help with that").
+- **An LLM judge** (`evals/judge.ts`) grades each case that carries a
+  `rubric`, for the grounding nuance patterns can't see ("did it invent a
+  fact"). It is **advisory by default** — reported, not blocking — because a
+  single judge score shouldn't be load-bearing (the lesson from Spandan's
+  Assay project, which is in the corpus). `npm run eval -- --strict-judge` or
+  `EVAL_STRICT_JUDGE=1` makes judge disagreements fail the run too.
+
+The citation-token matcher (server, client, and eval) accepts `[[proj:x]]`,
+`[proj:x]`, and `【proj:x】` — the model's canonical form is `[[...]]` but it
+occasionally reaches for the others, and a citation should never be silently
+dropped. Known soft spot, surfaced by this suite: in a two-project
+**comparison** the assistant cites both projects only ~4 times in 5, so
+"cites both" is checked by the advisory judge, not the hard gate (which just
+requires ≥1 citation) — a flaky hard check would red the daily refresh.
+
+`npm run eval` exits non-zero on any failure (or on a case with no effective
+check), so it gates CI: the daily `refresh-knowledge` workflow runs it
+against the freshly built corpus before committing or deploying, so a
+grounding regression blocks the release. Needs `OLLAMA_API_KEY`; set
+`EVAL_JUDGE=0` to skip the judge, `EVAL_CONCURRENCY` to tune throughput.
+
+### Refusal digest — `npm run eval:digest`
+
+`api/_lib/refusalLog.ts` pushes every refusal (`{question, timestamp,
+session_id}`) to a capped Redis list. `npm run eval:digest` groups the last 7
+days (`DIGEST_DAYS`) into a ranked table — the questions visitors keep asking
+that the corpus can't answer, i.e. the content gaps worth closing. The
+`refusal-digest` workflow runs it weekly and writes the table to the run
+summary. No-ops cleanly when Redis isn't configured.
+
 ## Structure
 
 ```text

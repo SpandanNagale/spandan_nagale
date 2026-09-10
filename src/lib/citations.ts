@@ -15,8 +15,11 @@
 export const CONTACT_EMAIL = 'spandan4844@gmail.com';
 
 /** Matches a single citation token. `proj:` slugs are lowercase kebab; the
- * only doc token is `doc:about`. Global + capturing for reuse with matchAll. */
-export const CITATION_RE = /\[\[(proj:[a-z0-9][a-z0-9-]*|doc:about)\]\]/g;
+ * only doc token is `doc:about`. Canonical form is [[...]], but the model
+ * sometimes emits a single bracket or a fullwidth 【...】 pair — accept those
+ * too so a citation is never silently dropped. Global + capturing for matchAll. */
+export const CITATION_RE =
+  /(?:\[\[|\[|【)(proj:[a-z0-9][a-z0-9-]*|doc:about)(?:\]\]|\]|】)/g;
 
 /** All distinct citation ids in `text`, in first-seen order. */
 export function parseCitations(text: string): string[] {

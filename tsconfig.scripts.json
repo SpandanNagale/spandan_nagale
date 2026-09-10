@@ -18,5 +18,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["scripts", "vitest.config.ts"]
+  "include": ["scripts", "evals", "vitest.config.ts"]
 }

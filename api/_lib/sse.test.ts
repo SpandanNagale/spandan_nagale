@@ -21,7 +21,14 @@ describe('extractCitations', () => {
   });
 
   it('ignores malformed tokens', () => {
-    expect(extractCitations('[[proj:Bad_Slug]] [[project:x]] [proj:querypilot] [[]]')).toEqual([]);
+    expect(extractCitations('[[proj:Bad_Slug]] [[project:x]] [[doc:resume]] [[]]')).toEqual([]);
+  });
+
+  it('accepts single-bracket and fullwidth 【】 forms the model sometimes emits', () => {
+    expect(extractCitations('education 【doc:about】 and [proj:keel] shipped')).toEqual([
+      'doc:about',
+      'proj:keel',
+    ]);
   });
 
   it('returns nothing for citation-free text', () => {

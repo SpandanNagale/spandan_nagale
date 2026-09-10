@@ -43,6 +43,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.KNOWLEDGE_GITHUB_TOKEN }}
           KNOWLEDGE_CONTEXT_WINDOW: '128000'
 
+      # Grounding gate: run the eval suite against the freshly built corpus.
+      # A regression here (a real question that now refuses, a refusal that now
+      # fabricates, a lost citation) fails the job before the new corpus is
+      # committed or deployed. Deterministic assertions block; the LLM judge is
+      # advisory (see the Evaluation section in README.md). Set EVAL_JUDGE=0
+      # here to drop the judge calls entirely.
+      - name: Eval suite (grounding gate)
+        env:
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL }}
+        run: npm run eval
+
       - name: Commit knowledge.json if corpus_version changed
         id: commit
         run: |

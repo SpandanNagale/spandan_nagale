@@ -1,0 +1,37 @@
+name: Refusal digest
+
+# Weekly: group the assistant's logged refusals into a ranked backlog and
+# write it to the workflow run summary. The questions that keep recurring are
+# the gaps worth filling in content/about.md or content/projects.yaml.
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Mondays 08:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refusal-digest
+  cancel-in-progress: false
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build the digest
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+          DIGEST_DAYS: '7'
+        run: npm run eval:digest

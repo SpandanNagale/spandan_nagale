@@ -10,7 +10,7 @@ interface AnswerTextProps {
 }
 
 // Drop a citation token that is still mid-stream (e.g. "[[proj:quer").
-const DANGLING_TOKEN = /\[\[[a-z:]*$/;
+const DANGLING_TOKEN = /(?:\[\[?|【)[a-z:]*$/;
 
 // Minimal inline markdown: **bold** and `code`. The model emits these; a full
 // markdown renderer would be overkill for 2-4 short paragraphs.

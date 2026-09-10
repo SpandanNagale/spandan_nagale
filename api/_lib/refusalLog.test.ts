@@ -35,4 +35,20 @@ describe('looksLikeRefusal', () => {
       ),
     ).toBe(true);
   });
+
+  it('flags a decline that uses a typographic apostrophe', () => {
+    expect(
+      looksLikeRefusal(
+        'The available information doesn’t include a company Spandan is planning to join. You can reach him at spandan4844@gmail.com.',
+      ),
+    ).toBe(true);
+  });
+
+  it('flags "has not disclosed" salary-type questions', () => {
+    expect(
+      looksLikeRefusal(
+        'Spandan has not disclosed his current salary or notice period. Contact him at spandan4844@gmail.com.',
+      ),
+    ).toBe(true);
+  });
 });
