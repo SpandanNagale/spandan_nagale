@@ -44,6 +44,31 @@ the corpus ever grows past what a single system prompt can hold, that's the
 point at which chunking and retrieval would earn their complexity — not
 before.
 
+### Chat API — `api/chat.ts` (Vercel Edge Function)
+
+`POST /api/chat` with `{ messages: {role, content}[], session_id }` streams a
+Server-Sent Events response: `token`, `citation`, `telemetry`, `done`, `error`.
+It loads the whole `knowledge.json` corpus into the system message (static
+prompt prefix first — see `api/_lib/systemPrompt.ts`, the public system
+prompt), then streams from Ollama Cloud's `/api/chat`. The client-visible
+system prompt is committed on purpose; there are no prompt-secrecy defenses.
+
+- **Provider:** Ollama Cloud. Model in `OLLAMA_MODEL` (default `gpt-oss:120b`).
+  Requires `OLLAMA_API_KEY`.
+- **Prompt caching:** Ollama Cloud *does* report it — `prompt_eval_cached_count`
+  in the final stream chunk — surfaced in the `telemetry` event as
+  `cache: hit|miss` and `cached_tokens_in`. After the first request the ~44K-token
+  corpus prefix is fully cached (`cached_tokens_in ≈ 44432`).
+- **TTFT:** ~2.2–2.9s warm in testing — above the 1.5s aspiration, dominated by
+  prefill over the 44K-token corpus even when cached. Levers if it matters:
+  trim the corpus (much of it is full README dumps) or switch `OLLAMA_MODEL`.
+- **Guards:** per-IP sliding window via Upstash Redis (10 / 10 min, 40 / day),
+  15-user-turn per-conversation cap, `num_predict` 700, request bodies capped
+  at 2 KB and messages at 1000 chars. Rate limiting is a no-op when
+  `UPSTASH_REDIS_REST_URL` / `_TOKEN` are unset (local dev) — production must
+  set them. Refusals (`{question, timestamp, session_id}`) are pushed to a
+  capped Redis list for a future backlog digest.
+
 ## Structure
 
 ```text
