@@ -1,7 +1,7 @@
 import type { Project } from '../types';
 
 export const RESUME_URL =
-  'https://docs.google.com/document/d/13B5uQ6_wfTwCmkJo2N-cpJEC5E3kuiF2/edit?usp=sharing&ouid=107327271757698511125&rtpof=true&sd=true';
+  'https://docs.google.com/document/d/1al65XI2dU4s8tdERcNYmebgPz6EJus3l/edit?usp=sharing&ouid=107327271757698511125&rtpof=true&sd=true';
 
 export const projects: Project[] = [
   {
