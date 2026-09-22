@@ -4,6 +4,7 @@ import AgentCanvas from './components/AgentCanvas';
 import Hero from './components/Hero';
 import SystemGrid from './components/SystemGrid';
 import SystemModal from './components/SystemModal';
+import LiveDemos from './components/LiveDemos';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
 import Footer from './components/Footer';
@@ -36,6 +37,7 @@ function App() {
       <main className="relative">
         <Hero />
         <SystemGrid projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
+        <LiveDemos />
         <Experience />
         <Skills />
         <Footer />

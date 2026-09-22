@@ -113,7 +113,7 @@
 - slug: querypilot
   name: QueryPilot
   repo: SpandanNagale/QueryPilot
-  live_url: null
+  live_url: https://query-pilot-nine.vercel.app
   status: complete
   one_liner: >
     A text-to-SQL agent that validates every generated statement at the AST
@@ -268,7 +268,7 @@
 - slug: crewai-research-pipeline
   name: CrewAI Research Pipeline
   repo: SpandanNagale/crewai-research-pipeline
-  live_url: null
+  live_url: https://research-pipeline-frontend.vercel.app
   status: complete
   one_liner: >
     A four-agent research system — Planner, Researcher, Writer, Critic — with
