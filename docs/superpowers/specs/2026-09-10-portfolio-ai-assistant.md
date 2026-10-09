@@ -133,7 +133,7 @@ regression — not part of Phase 1, since evals don't exist yet.)
 ## Phase 2 — Serving layer (future plan)
 
 `api/chat.ts` Vercel Edge Function, SSE streaming, Ollama Cloud provider,
-Upstash Redis rate limiting (10 msg/10min, 40/day per IP; 15 turns/session
+In-memory per-IP rate limiting (10 msg/min per IP; 15 turns/session
 cap), `prompts/system.md` per the spec's exact text, refusal logging.
 
 ## Phase 3 — Frontend (future plan)

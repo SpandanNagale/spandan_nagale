@@ -4,6 +4,7 @@ import {
   MAX_BODY_BYTES,
   MAX_MESSAGE_CHARS,
   MAX_SESSION_TURNS,
+  MAX_CHAT_INPUT_CHARS,
 } from './guards';
 
 const okBody = (over: Record<string, unknown> = {}) =>
@@ -32,9 +33,9 @@ describe('validateChatRequest', () => {
     expect(r).toMatchObject({ ok: false, status: 413 });
   });
 
-  it('accepts a JD-matcher-sized single message (~7 KB)', () => {
+  it('accepts a JD-matcher-sized single message (~7 KB) in jd mode', () => {
     const r = validateChatRequest(
-      okBody({ messages: [{ role: 'user', content: 'J'.repeat(7050) }] }),
+      okBody({ mode: 'jd', messages: [{ role: 'user', content: 'J'.repeat(7050) }] }),
     );
     expect(r.ok).toBe(true);
   });
@@ -54,9 +55,29 @@ describe('validateChatRequest', () => {
     expect(validateChatRequest(okBody({ messages: [] }))).toMatchObject({ ok: false, status: 400 });
   });
 
+  it('rejects a chat-mode question over the chat input cap', () => {
+    const r = validateChatRequest(
+      okBody({ messages: [{ role: 'user', content: 'a'.repeat(MAX_CHAT_INPUT_CHARS + 1) }] }),
+    );
+    expect(r).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it('allows a long assistant turn in chat-mode history', () => {
+    const r = validateChatRequest(
+      okBody({
+        messages: [
+          { role: 'user', content: 'hi' },
+          { role: 'assistant', content: 'a'.repeat(MAX_CHAT_INPUT_CHARS * 3) },
+          { role: 'user', content: 'more?' },
+        ],
+      }),
+    );
+    expect(r.ok).toBe(true);
+  });
+
   it('rejects a message over the character cap', () => {
     const r = validateChatRequest(
-      okBody({ messages: [{ role: 'user', content: 'a'.repeat(MAX_MESSAGE_CHARS + 1) }] }),
+      okBody({ mode: 'jd', messages: [{ role: 'user', content: 'a'.repeat(MAX_MESSAGE_CHARS + 1) }] }),
     );
     expect(r).toMatchObject({ ok: false, status: 400 });
   });

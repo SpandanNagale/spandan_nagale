@@ -28,6 +28,10 @@ export interface ChatTurn {
 export type ChatStatus = 'idle' | 'streaming' | 'error';
 
 const ENDPOINT = '/api/chat';
+// Fallback when the server's response carries no readable error message
+// (e.g. the platform's own 5xx page, or the network dropped).
+export const UNAVAILABLE_MESSAGE =
+  'The assistant is unavailable right now. Reach Spandan at spandan4844@gmail.com.';
 const SID_KEY = 'spandan-chat-sid';
 
 function sessionId(): string {
@@ -60,15 +64,21 @@ async function consume(
   onTelemetry?: (t: Telemetry) => void,
   mode: 'chat' | 'jd' = 'chat',
 ): Promise<OneShotResult> {
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages, session_id: sessionId(), mode }),
-    signal,
-  });
+  let res: Response;
+  try {
+    res = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, session_id: sessionId(), mode }),
+      signal,
+    });
+  } catch (err) {
+    if (signal.aborted) throw err;
+    throw new Error(UNAVAILABLE_MESSAGE);
+  }
 
   if (!res.ok || !res.body) {
-    let detail = `Request failed (${res.status}).`;
+    let detail = UNAVAILABLE_MESSAGE;
     try {
       const body = (await res.json()) as { error?: string };
       if (body.error) detail = body.error;
@@ -94,7 +104,7 @@ async function consume(
       const msg =
         data && typeof data === 'object' && 'message' in data
           ? String((data as { message: unknown }).message)
-          : 'The model backend failed.';
+          : UNAVAILABLE_MESSAGE;
       if (!text) throw new Error(msg);
       text += `\n\n_(interrupted: ${msg})_`;
     } else if (event === 'done') {

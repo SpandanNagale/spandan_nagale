@@ -47,7 +47,8 @@ export async function openOllamaStream(
       // Grounded factual Q&A — no chain-of-thought wanted. Reasoning models
       // (gpt-oss) may still emit some `thinking`; it's dropped downstream.
       think: false,
-      options: { num_predict: numPredict },
+      // Hard ceiling regardless of caller, so no request can buy a long generation.
+      options: { num_predict: Math.min(numPredict, JD_MAX_OUTPUT_TOKENS) },
     }),
     signal,
   });

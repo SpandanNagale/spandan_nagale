@@ -1,30 +1,56 @@
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+// Per-IP fixed-window limiter held in module memory. Each edge instance keeps
+// its own Map, so the limit is per-instance and best-effort — good enough to
+// blunt casual abuse on a portfolio site, with no external store to fail.
+// It never throws: any internal error allows the request.
 
-// Per-IP sliding window. When Upstash isn't configured (local dev), rate
-// limiting is a no-op that allows everything — the endpoint still works, it
-// just isn't protected. Production must set both env vars.
-const url = process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+export const RATE_LIMIT_MAX = 10;
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+// Bound memory on a long-lived instance; expired entries are swept first.
+const MAX_TRACKED_IPS = 5000;
 
-export const redis = url && token ? new Redis({ url, token }) : null;
+interface Window {
+  start: number;
+  count: number;
+}
 
-const perTenMinutes = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(10, '10 m'), prefix: 'chat:10m', analytics: false })
-  : null;
-const perDay = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(40, '1 d'), prefix: 'chat:1d', analytics: false })
-  : null;
+const windows = new Map<string, Window>();
 
 export interface RateLimitResult {
   allowed: boolean;
   reason?: string;
 }
 
-export async function checkRateLimit(ip: string): Promise<RateLimitResult> {
-  if (!perTenMinutes || !perDay) return { allowed: true };
-  const [short, long] = await Promise.all([perTenMinutes.limit(ip), perDay.limit(ip)]);
-  if (!short.success) return { allowed: false, reason: '10 messages per 10 minutes' };
-  if (!long.success) return { allowed: false, reason: '40 messages per day' };
-  return { allowed: true };
+function sweep(now: number) {
+  for (const [ip, w] of windows) {
+    if (now - w.start >= RATE_LIMIT_WINDOW_MS) windows.delete(ip);
+  }
+  // Still full after dropping expired entries: forget the oldest ones.
+  while (windows.size >= MAX_TRACKED_IPS) {
+    const oldest = windows.keys().next().value;
+    if (oldest === undefined) break;
+    windows.delete(oldest);
+  }
+}
+
+export function checkRateLimit(ip: string, now: number = Date.now()): RateLimitResult {
+  try {
+    const w = windows.get(ip);
+    if (!w || now - w.start >= RATE_LIMIT_WINDOW_MS) {
+      if (!w && windows.size >= MAX_TRACKED_IPS) sweep(now);
+      windows.set(ip, { start: now, count: 1 });
+      return { allowed: true };
+    }
+    if (w.count >= RATE_LIMIT_MAX) {
+      return { allowed: false, reason: `${RATE_LIMIT_MAX} messages per minute` };
+    }
+    w.count++;
+    return { allowed: true };
+  } catch {
+    return { allowed: true };
+  }
+}
+
+/** Test hook. */
+export function resetRateLimit() {
+  windows.clear();
 }

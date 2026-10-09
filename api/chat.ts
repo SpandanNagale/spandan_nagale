@@ -19,6 +19,12 @@ export const config = { runtime: 'edge' };
 
 const CONTEXT_WINDOW = Number(process.env.OLLAMA_CONTEXT_WINDOW ?? 128000);
 
+// Shown to visitors whenever the model backend (or anything else server-side)
+// fails. The real error goes to the function logs, never to the browser.
+const CONNECT_TIMEOUT_MS = 20_000;
+
+export const UNAVAILABLE_MESSAGE = `The assistant is unavailable right now. Reach Spandan at ${CONTACT_EMAIL}.`;
+
 function clientIp(req: Request): string {
   return (
     req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -35,17 +41,29 @@ function jsonError(message: string, status: number): Response {
 }
 
 export default async function handler(req: Request): Promise<Response> {
+  try {
+    return await handle(req);
+  } catch (err) {
+    console.error('[api/chat] unhandled error', err);
+    return jsonError(UNAVAILABLE_MESSAGE, 503);
+  }
+}
+
+async function handle(req: Request): Promise<Response> {
   if (req.method !== 'POST') return jsonError('Method not allowed.', 405);
 
   const apiKey = process.env.OLLAMA_API_KEY;
-  if (!apiKey) return jsonError('Server misconfigured: OLLAMA_API_KEY is not set.', 500);
+  if (!apiKey) {
+    console.error('[api/chat] OLLAMA_API_KEY is not set');
+    return jsonError(UNAVAILABLE_MESSAGE, 503);
+  }
 
   const rawBody = await req.text();
   const validation = validateChatRequest(rawBody);
   if (!validation.ok) return jsonError(validation.message, validation.status);
   const { messages, session_id, mode } = validation.data;
 
-  const rl = await checkRateLimit(clientIp(req));
+  const rl = checkRateLimit(clientIp(req));
   if (!rl.allowed) {
     return jsonError(
       `Rate limit reached (${rl.reason}). Email ${CONTACT_EMAIL} to keep the conversation going.`,
@@ -58,6 +76,26 @@ export default async function handler(req: Request): Promise<Response> {
   const abort = new AbortController();
   req.signal.addEventListener('abort', () => abort.abort());
 
+  // Open the upstream stream before committing to a 200, so a failed model
+  // call comes back as a JSON error the frontend can show.
+  // Vercel edge functions must start responding within 25s; give up on a
+  // hung upstream well before that.
+  const connectTimeout = setTimeout(() => abort.abort(), CONNECT_TIMEOUT_MS);
+  let body: ReadableStream<Uint8Array>;
+  try {
+    body = await openOllamaStream(
+      assembleMessages(messages, mode),
+      apiKey,
+      abort.signal,
+      mode === 'jd' ? JD_MAX_OUTPUT_TOKENS : MAX_OUTPUT_TOKENS,
+    );
+  } catch (err) {
+    console.error('[api/chat] model call failed', err);
+    return jsonError(UNAVAILABLE_MESSAGE, 503);
+  } finally {
+    clearTimeout(connectTimeout);
+  }
+
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -69,13 +107,6 @@ export default async function handler(req: Request): Promise<Response> {
       const emitted = new Set<string>();
 
       try {
-        const body = await openOllamaStream(
-          assembleMessages(messages, mode),
-          apiKey,
-          abort.signal,
-          mode === 'jd' ? JD_MAX_OUTPUT_TOKENS : MAX_OUTPUT_TOKENS,
-        );
-
         for await (const chunk of parseNdjson(body)) {
           const delta = chunk.message?.content ?? '';
           if (delta) {
@@ -123,13 +154,20 @@ export default async function handler(req: Request): Promise<Response> {
         }
 
         send('done', { citations: [...emitted] });
-        if (looksLikeRefusal(answer)) await logRefusal(lastUserMessage, session_id);
+        if (looksLikeRefusal(answer)) logRefusal(lastUserMessage, session_id);
       } catch (err) {
-        send('error', {
-          message: err instanceof Error ? err.message : 'The model backend failed.',
-        });
+        if (!abort.signal.aborted) console.error('[api/chat] stream failed', err);
+        try {
+          send('error', { message: UNAVAILABLE_MESSAGE });
+        } catch {
+          // client already gone
+        }
       } finally {
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // already closed/cancelled
+        }
       }
     },
     cancel() {

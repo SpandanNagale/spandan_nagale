@@ -8,6 +8,9 @@
 // chat turns are far smaller; the turn cap below bounds a conversation.
 export const MAX_BODY_BYTES = 16384;
 export const MAX_MESSAGE_CHARS = 8000;
+// Ordinary chat questions are capped much tighter than JD-matcher input. Only
+// user turns are checked — assistant turns in the history can run longer.
+export const MAX_CHAT_INPUT_CHARS = 1000;
 export const MAX_SESSION_TURNS = 15;
 export const CONTACT_EMAIL = 'spandan4844@gmail.com';
 
@@ -71,6 +74,13 @@ export function validateChatRequest(rawBody: string): ValidationResult {
     }
     if (content.length > MAX_MESSAGE_CHARS) {
       return { ok: false, status: 400, message: `Each message must be under ${MAX_MESSAGE_CHARS} characters.` };
+    }
+    if (mode === 'chat' && role === 'user' && content.length > MAX_CHAT_INPUT_CHARS) {
+      return {
+        ok: false,
+        status: 400,
+        message: `Please keep questions under ${MAX_CHAT_INPUT_CHARS} characters.`,
+      };
     }
     clean.push({ role, content });
   }

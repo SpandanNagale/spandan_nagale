@@ -62,13 +62,15 @@ system prompt is committed on purpose; there are no prompt-secrecy defenses.
 - **TTFT:** ~2.2–2.9s warm in testing — above the 1.5s aspiration, dominated by
   prefill over the 44K-token corpus even when cached. Levers if it matters:
   trim the corpus (much of it is full README dumps) or switch `OLLAMA_MODEL`.
-- **Guards:** per-IP sliding window via Upstash Redis (10 / 10 min, 40 / day),
-  15-user-turn per-conversation cap, `num_predict` 700, request bodies capped
-  at 16 KB and messages at 8000 chars (headroom for the JD matcher, which
-  sends a pasted job description as one message). Rate limiting is a no-op when
-  `UPSTASH_REDIS_REST_URL` / `_TOKEN` are unset (local dev) — production must
-  set them. Refusals (`{question, timestamp, session_id}`) are pushed to a
-  capped Redis list for a future backlog digest.
+- **Guards:** in-memory per-IP limiter (10 requests / minute, keyed on
+  `x-forwarded-for`; per-instance and best-effort, and it never blocks on its
+  own failure), 15-user-turn per-conversation cap, chat questions capped at
+  1000 chars, `num_predict` 700 (2500 for the JD matcher, hard-capped there),
+  request bodies capped at 16 KB and messages at 8000 chars (headroom for the
+  JD matcher, which sends a pasted job description as one message). Any model
+  or server failure returns a friendly "assistant is unavailable" message with
+  the contact email; the real error goes to the function logs. Refusals are
+  logged as one `chat_refusal` JSON line per refusal in the Vercel function logs.
 
 ### Chat UI — the assistant panel
 
@@ -131,14 +133,12 @@ against the freshly built corpus before committing or deploying, so a
 grounding regression blocks the release. Needs `OLLAMA_API_KEY`; set
 `EVAL_JUDGE=0` to skip the judge, `EVAL_CONCURRENCY` to tune throughput.
 
-### Refusal digest — `npm run eval:digest`
+### Refusal log
 
-`api/_lib/refusalLog.ts` pushes every refusal (`{question, timestamp,
-session_id}`) to a capped Redis list. `npm run eval:digest` groups the last 7
-days (`DIGEST_DAYS`) into a ranked table — the questions visitors keep asking
-that the corpus can't answer, i.e. the content gaps worth closing. The
-`refusal-digest` workflow runs it weekly and writes the table to the run
-summary. No-ops cleanly when Redis isn't configured.
+`api/_lib/refusalLog.ts` writes every refusal (`{event: "chat_refusal",
+question, timestamp, session_id}`) to the function logs. Search the Vercel
+logs for `chat_refusal` to see what visitors asked that the corpus couldn't
+answer — the content gaps worth closing.
 
 ## Structure
 
