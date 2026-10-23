@@ -15,7 +15,8 @@ const LIVE_DEMOS: LiveDemo[] = [
   {
     name: 'ContextLens',
     url: 'https://context-lense.vercel.app/',
-    tagline: 'Measures how context-window size affects answer quality when querying a codebase.',
+    tagline:
+      'Asks the same question about a GitHub repo twice — whole files vs a compressed symbol map — and compares tokens, cost, latency and the answers side by side.',
     stack: ['Next.js 15', 'TypeScript', 'Groq', 'GitHub API'],
   },
   {
@@ -29,7 +30,8 @@ const LIVE_DEMOS: LiveDemo[] = [
   {
     name: 'CrewAI Research Pipeline',
     url: 'https://research-pipeline-frontend.vercel.app/',
-    tagline: 'A four-agent research crew that plans, gathers, drafts, and judges its own output before it reaches you.',
+    tagline:
+      'A six-agent research crew that plans, gathers, cross-checks and classifies evidence, drafts, and judges its own output before it reaches you.',
     stack: ['CrewAI', 'ChromaDB', 'Ollama', 'FastAPI'],
     image: researchPipelineImg,
   },
@@ -42,37 +44,40 @@ const LIVE_DEMOS: LiveDemo[] = [
   },
 ];
 
-/** ContextLens has no screenshot on hand — an illustrative placeholder
- * standing in for one, styled after what the tool actually measures
- * (answer quality dropping as context grows), not a fake UI. */
+/** ContextLens has no screenshot in the repo — a drawn stand-in using the
+ * numbers from one real run (sindresorhus/meow, 24 files / 63 symbols). */
+const CONTEXTLENS_RUN = [
+  { mode: 'NAIVE — WHOLE FILES', tokens: 11608, latency: '4.2s', tone: 'var(--muted)' },
+  { mode: 'COMPRESSED — SYMBOL MAP', tokens: 4669, latency: '2.3s', tone: 'var(--flow)' },
+];
+
 function ContextLensPlaceholder() {
-  const bars = [92, 84, 71, 58, 44];
+  const max = CONTEXTLENS_RUN[0].tokens;
   return (
     <svg viewBox="0 0 400 225" className="w-full h-full" aria-hidden="true">
       <rect width="400" height="225" fill="var(--void)" />
-      {[60, 100, 140].map((y) => (
-        <line key={y} x1="20" y1={y} x2="380" y2={y} stroke="var(--line)" strokeWidth="1" />
-      ))}
-      {bars.map((h, i) => (
-        <rect
-          key={i}
-          x={40 + i * 68}
-          y={190 - h * 1.4}
-          width={40}
-          height={h * 1.4}
-          fill={i < 2 ? 'var(--flow)' : i < 3 ? 'var(--gate)' : 'var(--fault)'}
-          opacity={0.18 + (bars.length - i) * 0.04}
-          stroke={i < 2 ? 'var(--flow)' : i < 3 ? 'var(--gate)' : 'var(--fault)'}
-          strokeWidth="1"
-        />
-      ))}
-      <line x1="20" y1="190" x2="380" y2="190" stroke="var(--text)" strokeWidth="1" />
-      <text x="20" y="212" fontFamily="var(--font-mono)" fontSize="10" fill="var(--muted)">
-        CONTEXT SIZE &rarr;
+      <text x="24" y="44" fontFamily="var(--font-display)" fontSize="26" fill="var(--flow)">
+        60% fewer tokens
       </text>
-      <text x="20" y="30" fontFamily="var(--font-mono)" fontSize="10" fill="var(--muted)">
-        ANSWER QUALITY
+      <text x="24" y="62" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
+        COMPRESSED VS NAIVE · SINDRESORHUS/MEOW
       </text>
+      {CONTEXTLENS_RUN.map((r, i) => {
+        const y = 92 + i * 56;
+        const w = (r.tokens / max) * 230;
+        return (
+          <g key={r.mode}>
+            <text x="24" y={y} fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
+              {r.mode}
+            </text>
+            <rect x="24" y={y + 8} width="352" height="18" rx="3" fill="var(--panel)" stroke="var(--line)" />
+            <rect x="24" y={y + 8} width={w} height="18" rx="3" fill={r.tone} opacity="0.22" stroke={r.tone} />
+            <text x={24 + w + 8} y={y + 21} fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text)">
+              {r.tokens.toLocaleString('en-US')} tok · {r.latency}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }

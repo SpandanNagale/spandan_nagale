@@ -130,13 +130,15 @@ export const projects: Project[] = [
     id: 'crewai-research-pipeline',
     name: 'CrewAI Research Pipeline',
     tagline:
-      'A four-agent research crew that plans, gathers, drafts, and then judges its own output before it reaches you.',
+      'A six-agent research crew that plans, gathers, cross-checks and classifies its evidence, drafts, and then judges its own output before it reaches you.',
     repo: 'https://github.com/SpandanNagale/Crewai-Research-pipeline',
     nodes: [
       { id: 'query', label: 'Query', job: 'user query', kind: 'terminal' },
       { id: 'orchestrator', label: 'Orchestrator', job: 'CrewAI orchestrator', kind: 'deterministic' },
       { id: 'planner', label: 'Planner', job: 'decomposes the topic into sub-questions', kind: 'agent', model: 'gemma' },
       { id: 'researcher', label: 'Researcher', job: 'retrieves via web search, wiki, ChromaDB memory', kind: 'agent', model: 'gemma' },
+      { id: 'evidence_comparator', label: 'Evidence Comparator', job: 'cross-checks claims across retrieved sources', kind: 'gate', model: 'gemma' },
+      { id: 'classifier', label: 'Classifier', job: 'classifies the evidence before drafting', kind: 'agent', model: 'gemma' },
       { id: 'writer', label: 'Writer', job: 'drafts the synthesis', kind: 'agent', model: 'gemma' },
       { id: 'critic', label: 'Critic', job: 'LLM-as-judge scoring', kind: 'gate', model: 'gemma' },
       { id: 'report', label: 'Report', job: 'cited markdown report', kind: 'terminal' },
@@ -145,13 +147,15 @@ export const projects: Project[] = [
       { from: 'query', to: 'orchestrator', kind: 'flow' },
       { from: 'orchestrator', to: 'planner', kind: 'flow' },
       { from: 'planner', to: 'researcher', kind: 'flow' },
-      { from: 'researcher', to: 'writer', kind: 'flow' },
+      { from: 'researcher', to: 'evidence_comparator', kind: 'flow' },
+      { from: 'evidence_comparator', to: 'classifier', kind: 'flow' },
+      { from: 'classifier', to: 'writer', kind: 'flow' },
       { from: 'writer', to: 'critic', kind: 'flow' },
       { from: 'critic', to: 'report', kind: 'flow' },
       { from: 'critic', to: 'writer', kind: 'retry' },
     ],
     howItWorks:
-      'Four specialized agents — Planner, Researcher, Writer, Critic — coordinated by CrewAI over Gemma running locally through Ollama. Agent prompts live in a YAML config so they\'re editable without touching code, ChromaDB provides persistent vector memory across runs, and a FastAPI backend exposes both a request/response endpoint and an SSE stream. The eval module scores finished reports with the same model acting as judge.',
+      'Six specialized agents — Planner, Researcher, Evidence Comparator, Classifier, Writer, Critic — coordinated by CrewAI over Gemma running locally through Ollama. Agent prompts live in a YAML config so they\'re editable without touching code, ChromaDB provides persistent vector memory across runs, and a FastAPI backend exposes both a request/response endpoint and an SSE stream. The eval module scores finished reports with the same model acting as judge.',
     highlights: [
       'Weighted LLM-as-judge scoring rather than a vague quality prompt: citation at 40%, coverage at 35%, clarity at 25%.',
       "Every agent prompt lives in agents_config.yaml — the pipeline is retunable without a code change.",
@@ -159,7 +163,7 @@ export const projects: Project[] = [
       "Model-agnostic: swapping the Ollama model in .env changes the whole crew.",
     ],
     metrics: [
-      { value: '4', label: 'AGENTS' },
+      { value: '6', label: 'AGENTS' },
       { value: '3', label: 'SCORED DIMENSIONS' },
       { value: 'SSE', label: 'STREAMING' },
     ],
