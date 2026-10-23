@@ -6,6 +6,7 @@ import ProofMarquee from './components/ProofMarquee';
 import SystemRows from './components/SystemRows';
 import SystemModal from './components/SystemModal';
 import ProcessBand from './components/ProcessBand';
+import LocalHardware from './components/LocalHardware';
 import LiveDemos from './components/LiveDemos';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
@@ -41,6 +42,7 @@ function App() {
         <ProofMarquee />
         <SystemRows projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
         <ProcessBand reducedMotion={reducedMotion} />
+        <LocalHardware reducedMotion={reducedMotion} />
         <LiveDemos />
         <Experience />
         <Skills />
