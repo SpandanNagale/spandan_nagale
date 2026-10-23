@@ -96,15 +96,14 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
       >
         <header className="flex items-center justify-between border-b border-line px-5 py-4">
           <div className="flex flex-col gap-0.5">
-            <span className="font-display text-lg text-text">Ask about Spandan</span>
+            <span className="display text-2xl text-text">Ask about Spandan</span>
             <span className="mono-label text-muted">GROUNDED IN A CURATED CORPUS · THIRD PERSON</span>
           </div>
           <button
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors"
-            style={{ borderRadius: 2 }}
+            className="rounded-full w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" />
@@ -122,7 +121,7 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
               onClick={() => setTab(t)}
               className={`mono-label px-5 py-3 border-b-2 transition-colors ${
                 tab === t
-                  ? 'border-flow text-flow'
+                  ? 'border-text text-text'
                   : 'border-transparent text-muted hover:text-text'
               }`}
             >
@@ -149,8 +148,7 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
                       setInput('');
                       void send(s);
                     }}
-                    className="text-left text-sm text-text border border-line px-3 py-2 hover:border-flow hover:text-flow transition-colors"
-                    style={{ borderRadius: 2 }}
+                    className="rounded-lg text-left text-sm text-text border border-line bg-panel px-3 py-2.5 hover:border-line-strong hover:bg-void transition-colors"
                   >
                     {s}
                   </button>
@@ -163,7 +161,7 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
                 turn.role === 'user' ? (
                   <div key={i} className="flex flex-col gap-1 items-end">
                     <span className="mono-label text-muted">YOU</span>
-                    <p className="text-text leading-relaxed bg-void border border-line px-3 py-2 max-w-[85%]" style={{ borderRadius: 2 }}>
+                    <p className="rounded-2xl rounded-br-md text-on-ink leading-relaxed bg-ink px-4 py-2.5 max-w-[85%]">
                       {turn.content}
                     </p>
                   </div>
@@ -205,15 +203,13 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
                 }}
                 rows={2}
                 placeholder="Ask about a project, a skill, his availability…"
-                className="flex-1 resize-none bg-void border border-line px-3 py-2 text-sm text-text leading-relaxed focus-visible:border-flow outline-none"
-                style={{ borderRadius: 2 }}
+                className="rounded-xl flex-1 resize-none bg-void border border-line px-3 py-2.5 text-sm text-text leading-relaxed focus-visible:border-line-strong"
               />
               {streaming ? (
                 <button
                   type="button"
                   onClick={stop}
-                  className="mono-label border border-line text-muted px-3 py-2 hover:border-fault hover:text-fault transition-colors shrink-0"
-                  style={{ borderRadius: 2 }}
+                  className="rounded-full mono-label border border-line text-muted px-4 py-2.5 hover:border-fault hover:text-fault transition-colors shrink-0"
                 >
                   STOP
                 </button>
@@ -222,10 +218,9 @@ export default function ChatPanel({ onClose, reducedMotion }: ChatPanelProps) {
                   type="button"
                   onClick={submit}
                   disabled={input.trim().length === 0}
-                  className="mono-label border border-flow text-flow px-3 py-2 hover:bg-flow/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
-                  style={{ borderRadius: 2 }}
+                  className="pill !py-2.5 !px-4 !text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
                 >
-                  SEND
+                  Send <span className="arrow" aria-hidden="true">&rarr;</span>
                 </button>
               )}
             </div>

@@ -22,8 +22,7 @@ export default function SystemCard({ project, onOpen, reducedMotion }: SystemCar
       onMouseLeave={() => setHovered(false)}
       onFocus={() => setHovered(true)}
       onBlur={() => setHovered(false)}
-      className="group relative flex flex-col gap-4 text-left p-6 bg-panel border border-line rounded-sm transition-colors hover:border-flow focus-visible:border-flow"
-      style={{ borderRadius: 2 }}
+      className="rounded-lg group relative flex flex-col gap-4 text-left p-6 bg-panel border border-line rounded-sm transition-colors hover:border-flow focus-visible:border-flow"
       whileHover={reducedMotion ? undefined : { y: -2 }}
       transition={{ duration: 0.15 }}
     >

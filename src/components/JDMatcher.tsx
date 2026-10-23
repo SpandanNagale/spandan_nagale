@@ -110,8 +110,7 @@ export default function JDMatcher() {
         rows={6}
         spellCheck={false}
         placeholder="Responsibilities, required skills, years of experience…"
-        className="w-full resize-y bg-void border border-line px-3 py-2 text-sm text-text leading-relaxed focus-visible:border-flow outline-none"
-        style={{ borderRadius: 2 }}
+        className="rounded-lg w-full resize-y bg-void border border-line px-3 py-2 text-sm text-text leading-relaxed focus-visible:border-flow outline-none"
         disabled={phase === 'running'}
       />
 
@@ -120,17 +119,15 @@ export default function JDMatcher() {
           type="button"
           onClick={run}
           disabled={jd.trim().length < 40 || phase === 'running'}
-          className="mono-label border border-flow text-flow px-3 py-2 hover:bg-flow/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          style={{ borderRadius: 2 }}
+          className="pill !py-2.5 !px-4 !text-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          {phase === 'running' ? 'MATCHING…' : 'MATCH AGAINST CORPUS'}
+          {phase === 'running' ? 'Matching…' : 'Match against corpus'}
         </button>
         {phase === 'running' && (
           <button
             type="button"
             onClick={stop}
-            className="mono-label border border-line text-muted px-3 py-2 hover:border-fault hover:text-fault transition-colors"
-            style={{ borderRadius: 2 }}
+            className="rounded-lg mono-label border border-line text-muted px-3 py-2 hover:border-fault hover:text-fault transition-colors"
           >
             STOP
           </button>
@@ -139,8 +136,7 @@ export default function JDMatcher() {
           <button
             type="button"
             onClick={reset}
-            className="mono-label border border-line text-muted px-3 py-2 hover:border-flow hover:text-flow transition-colors"
-            style={{ borderRadius: 2 }}
+            className="rounded-lg mono-label border border-line text-muted px-3 py-2 hover:border-flow hover:text-flow transition-colors"
           >
             CLEAR
           </button>
@@ -151,7 +147,7 @@ export default function JDMatcher() {
       </div>
 
       {phase === 'running' && (
-        <pre className="text-xs text-muted font-mono whitespace-pre-wrap max-h-40 overflow-y-auto border border-line p-3" style={{ borderRadius: 2 }}>
+        <pre className="rounded-lg text-xs text-muted font-mono whitespace-pre-wrap max-h-40 overflow-y-auto border border-line p-3">
           {raw || 'Waiting for the model…'}
         </pre>
       )}
@@ -180,8 +176,7 @@ export default function JDMatcher() {
             {match.requirements.map((r, i) => (
               <div key={i} className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-1 py-3">
                 <span
-                  className={`mono-label border px-2 py-1 h-fit w-fit ${STATUS_STYLE[r.status]}`}
-                  style={{ borderRadius: 2 }}
+                  className={`rounded-lg mono-label border px-2 py-1 h-fit w-fit ${STATUS_STYLE[r.status]}`}
                 >
                   {r.status}
                 </span>
