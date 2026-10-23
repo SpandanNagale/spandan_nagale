@@ -43,7 +43,7 @@ function App() {
         <SystemRows projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
         <ProcessBand reducedMotion={reducedMotion} />
         <LocalHardware reducedMotion={reducedMotion} />
-        <LiveDemos />
+        <LiveDemos reducedMotion={reducedMotion} />
         <Experience />
         <Skills />
         <Footer />
