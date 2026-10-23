@@ -313,7 +313,11 @@ body {
   color: var(--on-ink);
 }
 
-:focus-visible {
-  outline: 2px solid var(--flow);
-  outline-offset: 2px;
+/* Layered so a component can opt out with a utility (e.g. the chat composer,
+ * which shows focus on its container instead). */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--flow);
+    outline-offset: 2px;
+  }
 }
