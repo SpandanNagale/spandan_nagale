@@ -19,7 +19,7 @@ export function SplitHeadline({
   className?: string;
 }) {
   return (
-    <h2 id={id} className={`display text-[clamp(40px,6vw,84px)] ${className}`}>
+    <h2 id={id} className={`display ${className || 'text-[clamp(40px,6vw,84px)]'}`}>
       <span className="block text-text">{first}</span>
       <span className="block text-dim">{second}</span>
     </h2>

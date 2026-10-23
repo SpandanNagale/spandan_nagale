@@ -8,6 +8,7 @@ import SystemModal from './components/SystemModal';
 import ProcessBand from './components/ProcessBand';
 import LocalHardware from './components/LocalHardware';
 import LiveDemos from './components/LiveDemos';
+import EvalSection from './components/EvalSection';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
 import Footer from './components/Footer';
@@ -44,6 +45,7 @@ function App() {
         <ProcessBand reducedMotion={reducedMotion} />
         <LocalHardware reducedMotion={reducedMotion} />
         <LiveDemos reducedMotion={reducedMotion} />
+        <EvalSection reducedMotion={reducedMotion} />
         <Experience />
         <Skills />
         <Footer />
