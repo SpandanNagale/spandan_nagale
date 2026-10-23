@@ -90,11 +90,13 @@ export function Marquee({
           ))}
         </div>
       </div>
-      <ul className="sr-only" aria-label={srLabel}>
-        {srItems.map((s) => (
-          <li key={s}>{s}</li>
-        ))}
-      </ul>
+      {srItems.length > 0 && (
+        <ul className="sr-only" aria-label={srLabel}>
+          {srItems.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ul>
+      )}
     </>
   );
 }

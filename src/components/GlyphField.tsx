@@ -207,12 +207,12 @@ export default function GlyphField({ mode, reducedMotion, className }: GlyphFiel
           const yBase = r * step;
           const h = Math.sin(c * 0.22 + t) * Math.cos(r * 0.18 - t * 0.8) + Math.sin((c + r) * 0.08 + t * 0.6);
           const n = (h + 2) / 4; // 0..1
-          const alpha = edge * n * 0.75;
+          const alpha = Math.min(1, edge * n * 1.15);
           if (alpha < 0.05) continue;
           ctx!.globalAlpha = alpha;
           const accent = n > 0.86 && (c * 31 + r * 17) % 9 === 0;
           ctx!.fillStyle = accent ? ((c + r) % 2 ? colors.flow : colors.gate) : colors.ink;
-          ctx!.fillText(n > 0.8 ? '○' : n > 0.62 ? '—' : n > 0.45 ? '·' : '.', x, yBase + h * 4);
+          ctx!.fillText(n > 0.8 ? '○' : n > 0.62 ? '—' : n > 0.45 ? '·' : '.', x, yBase + h * 7);
         }
       }
     }

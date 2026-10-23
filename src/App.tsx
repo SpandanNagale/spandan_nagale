@@ -4,13 +4,14 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import ProofMarquee from './components/ProofMarquee';
 import SystemRows from './components/SystemRows';
-import SystemModal from './components/SystemModal';
 import ProcessBand from './components/ProcessBand';
 import LocalHardware from './components/LocalHardware';
 import LiveDemos from './components/LiveDemos';
 import EvalSection from './components/EvalSection';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
+import ContactCTA from './components/ContactCTA';
+import SystemModal from './components/SystemModal';
 import Footer from './components/Footer';
 import AssistantDock from './components/AssistantDock';
 import { projects } from './data/projects';
@@ -46,10 +47,11 @@ function App() {
         <LocalHardware reducedMotion={reducedMotion} />
         <LiveDemos reducedMotion={reducedMotion} />
         <EvalSection reducedMotion={reducedMotion} />
-        <Experience />
+        <Experience reducedMotion={reducedMotion} />
         <Skills />
-        <Footer />
+        <ContactCTA reducedMotion={reducedMotion} />
       </main>
+      <Footer />
 
       <AnimatePresence>
         {activeProject && (
