@@ -8,13 +8,14 @@ interface MiniGraphProps {
   edges: FlowEdge[];
   active: boolean;
   reducedMotion: boolean;
+  className?: string;
 }
 
 const WIDTH = 200;
 const HEIGHT = 36;
 const DOT = 5;
 
-export default function MiniGraph({ nodes, edges, active, reducedMotion }: MiniGraphProps) {
+export default function MiniGraph({ nodes, edges, active, reducedMotion, className = 'w-full h-9' }: MiniGraphProps) {
   const { layerOf, layers } = computeLayers(nodes, edges);
   const layerCount = layers.length;
 
@@ -39,7 +40,7 @@ export default function MiniGraph({ nodes, edges, active, reducedMotion }: MiniG
   }, [active]);
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full h-9" aria-hidden="true" focusable="false">
+    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className={className} aria-hidden="true" focusable="false">
       {edges.map((edge, i) => {
         const a = positions.get(edge.from);
         const b = positions.get(edge.to);
@@ -52,10 +53,11 @@ export default function MiniGraph({ nodes, edges, active, reducedMotion }: MiniG
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="var(--line)"
+            stroke={active && edge.kind === 'reject' ? 'var(--fault)' : active && edge.kind === 'retry' ? 'var(--gate)' : 'var(--muted)'}
             strokeWidth={1}
             strokeDasharray={edge.kind === 'reject' ? '3 2' : isBack ? '2 2' : undefined}
-            opacity={isBack ? 0.4 : 0.7}
+            opacity={isBack ? 0.45 : 0.6}
+            style={{ transition: 'stroke 0.3s' }}
           />
         );
       })}
@@ -73,7 +75,7 @@ export default function MiniGraph({ nodes, edges, active, reducedMotion }: MiniG
             cy={pos.y}
             r={size / 2}
             fill="var(--panel)"
-            stroke="var(--line)"
+            stroke="var(--muted)"
             strokeWidth={1}
           />
         ) : (
@@ -85,7 +87,7 @@ export default function MiniGraph({ nodes, edges, active, reducedMotion }: MiniG
             height={size}
             rx={1}
             fill="var(--panel)"
-            stroke={isGate ? 'var(--gate)' : 'var(--line)'}
+            stroke={isGate ? 'var(--gate)' : 'var(--text)'}
             strokeWidth={1}
             strokeDasharray={isDeterministic ? '2 1.5' : undefined}
           />

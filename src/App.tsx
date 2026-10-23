@@ -2,7 +2,8 @@ import { AnimatePresence } from 'framer-motion';
 import { useCallback, useRef, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
-import SystemGrid from './components/SystemGrid';
+import ProofMarquee from './components/ProofMarquee';
+import SystemRows from './components/SystemRows';
 import SystemModal from './components/SystemModal';
 import LiveDemos from './components/LiveDemos';
 import Experience from './components/Experience';
@@ -36,7 +37,8 @@ function App() {
 
       <main id="top" className="relative overflow-x-clip">
         <Hero reducedMotion={reducedMotion} />
-        <SystemGrid projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
+        <ProofMarquee />
+        <SystemRows projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
         <LiveDemos />
         <Experience />
         <Skills />
