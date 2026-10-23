@@ -48,7 +48,7 @@ export default function Navbar() {
           Spandan Nagale
         </a>
 
-        <ul className="hidden md:flex items-center gap-6">
+        <ul className="hidden lg:flex items-center gap-6">
           {LINKS.map((l) => (
             <li key={l.href}>
               <a href={l.href} className="text-sm text-muted hover:text-text transition-colors">
@@ -78,7 +78,7 @@ export default function Navbar() {
           </button>
           <button
             type="button"
-            className="md:hidden w-10 h-10 flex items-center justify-center rounded-full border border-line bg-panel text-text"
+            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full border border-line bg-panel text-text"
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -98,7 +98,7 @@ export default function Navbar() {
       {menuOpen && (
         <div
           id="mobile-menu"
-          className="pointer-events-auto md:hidden mx-auto max-w-[860px] mt-2 rounded-3xl border border-line bg-panel/95 backdrop-blur-md p-2 shadow-[0_8px_30px_-12px_rgba(10,10,10,0.18)]"
+          className="pointer-events-auto lg:hidden mx-auto max-w-[860px] mt-2 rounded-3xl border border-line bg-panel/95 backdrop-blur-md p-2 shadow-[0_8px_30px_-12px_rgba(10,10,10,0.18)]"
         >
           <ul className="flex flex-col">
             {LINKS.map((l) => (
@@ -119,7 +119,7 @@ export default function Navbar() {
                 rel="noopener noreferrer"
                 className="block px-4 py-3 text-base text-text rounded-2xl hover:bg-void"
               >
-                Résumé &nearr;
+                Résumé ↗
               </a>
             </li>
           </ul>

@@ -34,8 +34,8 @@ function App() {
       <div className="page-grid" aria-hidden="true" />
       <Navbar />
 
-      <main id="top" className="relative">
-        <Hero />
+      <main id="top" className="relative overflow-x-clip">
+        <Hero reducedMotion={reducedMotion} />
         <SystemGrid projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
         <LiveDemos />
         <Experience />

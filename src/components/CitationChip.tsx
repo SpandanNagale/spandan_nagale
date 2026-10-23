@@ -51,7 +51,7 @@ export default function CitationChip({ id }: CitationChipProps) {
       title={`Open ${target.label}`}
     >
       {target.label}
-      <span aria-hidden="true">&nearr;</span>
+      <span aria-hidden="true">↗</span>
     </a>
   );
 }
