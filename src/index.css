@@ -46,7 +46,7 @@
   color: var(--text);
 }
 
-@theme {
+@theme inline {
   --color-void: var(--void);
   --color-panel: var(--panel);
   --color-line: var(--line);

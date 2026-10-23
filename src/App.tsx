@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import ProofMarquee from './components/ProofMarquee';
 import SystemRows from './components/SystemRows';
 import SystemModal from './components/SystemModal';
+import ProcessBand from './components/ProcessBand';
 import LiveDemos from './components/LiveDemos';
 import Experience from './components/Experience';
 import Skills from './components/Skills';
@@ -39,6 +40,7 @@ function App() {
         <Hero reducedMotion={reducedMotion} />
         <ProofMarquee />
         <SystemRows projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
+        <ProcessBand reducedMotion={reducedMotion} />
         <LiveDemos />
         <Experience />
         <Skills />
