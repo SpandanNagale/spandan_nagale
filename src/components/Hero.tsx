@@ -43,7 +43,7 @@ export default function Hero({ reducedMotion }: { reducedMotion: boolean }) {
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative z-10 min-h-[100svh] flex flex-col justify-between px-4 md:px-6 max-w-[1320px] mx-auto pt-28 md:pt-36 pb-12 overflow-x-clip"
+      className="relative z-10 md:min-h-[100svh] flex flex-col justify-between px-4 md:px-6 max-w-[1320px] mx-auto pt-28 md:pt-36 pb-12 overflow-x-clip"
     >
       <div
         className="pointer-events-none absolute inset-x-0 top-20 h-[90vw] max-h-[520px] opacity-25 md:opacity-100 md:max-h-none md:inset-x-auto md:h-auto md:top-[54%] md:-translate-y-1/2 md:right-0 md:w-[min(44vw,620px)] md:aspect-square"

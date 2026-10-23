@@ -268,7 +268,10 @@ body {
   }
   .marquee-track {
     animation: none;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    row-gap: 1.5rem;
+    width: 100%;
     min-width: 0;
     flex-shrink: 1;
   }

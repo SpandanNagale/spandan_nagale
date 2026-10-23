@@ -23,8 +23,8 @@ export default function ProofMarquee() {
         srLabel="Proof points from the systems below"
         srItems={PROOFS.map((p) => `${p.value} ${p.label.toLowerCase()} — ${p.source}`)}
         items={PROOFS.map((p) => (
-          <div key={`${p.source}-${p.label}`} className="flex flex-col gap-2 px-10 border-l border-line min-w-[220px]">
-            <span className="display text-5xl md:text-6xl text-text">{p.value}</span>
+          <div key={`${p.source}-${p.label}`} className="flex flex-col gap-2 px-5 md:px-10 border-l border-line md:min-w-[220px]">
+            <span className="display text-4xl md:text-6xl text-text">{p.value}</span>
             <span className="mono-label text-muted">{p.label}</span>
             <span className="text-sm text-muted">{p.source}</span>
           </div>
