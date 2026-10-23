@@ -1,6 +1,7 @@
 import keelImg from '../assets/live/keel.png';
 import queryPilotImg from '../assets/live/querypilot.png';
 import researchPipelineImg from '../assets/live/research-pipeline.png';
+import { Eyebrow, Reveal, SectionShell, SplitHeadline } from './ui';
 
 interface LiveDemo {
   name: string;
@@ -14,7 +15,8 @@ const LIVE_DEMOS: LiveDemo[] = [
   {
     name: 'ContextLens',
     url: 'https://context-lense.vercel.app/',
-    tagline: 'Measures how context-window size affects answer quality when querying a codebase.',
+    tagline:
+      'Asks the same question about a GitHub repo twice — whole files vs a compressed symbol map — and compares tokens, cost, latency and the answers side by side.',
     stack: ['Next.js 15', 'TypeScript', 'Groq', 'GitHub API'],
   },
   {
@@ -28,7 +30,8 @@ const LIVE_DEMOS: LiveDemo[] = [
   {
     name: 'CrewAI Research Pipeline',
     url: 'https://research-pipeline-frontend.vercel.app/',
-    tagline: 'A four-agent research crew that plans, gathers, drafts, and judges its own output before it reaches you.',
+    tagline:
+      'A six-agent research crew that plans, gathers, cross-checks and classifies evidence, drafts, and judges its own output before it reaches you.',
     stack: ['CrewAI', 'ChromaDB', 'Ollama', 'FastAPI'],
     image: researchPipelineImg,
   },
@@ -41,76 +44,107 @@ const LIVE_DEMOS: LiveDemo[] = [
   },
 ];
 
-/** ContextLens has no screenshot on hand — an illustrative placeholder
- * standing in for one, styled after what the tool actually measures
- * (answer quality dropping as context grows), not a fake UI. */
+/** ContextLens has no screenshot in the repo — a drawn stand-in using the
+ * numbers from one real run (sindresorhus/meow, 24 files / 63 symbols). */
+const CONTEXTLENS_RUN = [
+  { mode: 'NAIVE — WHOLE FILES', tokens: 11608, latency: '4.2s', tone: 'var(--muted)' },
+  { mode: 'COMPRESSED — SYMBOL MAP', tokens: 4669, latency: '2.3s', tone: 'var(--flow)' },
+];
+
 function ContextLensPlaceholder() {
-  const bars = [92, 84, 71, 58, 44];
+  const max = CONTEXTLENS_RUN[0].tokens;
   return (
     <svg viewBox="0 0 400 225" className="w-full h-full" aria-hidden="true">
       <rect width="400" height="225" fill="var(--void)" />
-      {bars.map((h, i) => (
-        <rect
-          key={i}
-          x={40 + i * 68}
-          y={190 - h * 1.4}
-          width={40}
-          height={h * 1.4}
-          fill={i < 2 ? 'var(--flow)' : i < 3 ? 'var(--gate)' : 'var(--fault)'}
-          opacity={0.85}
-        />
-      ))}
-      <line x1="20" y1="190" x2="380" y2="190" stroke="var(--line)" strokeWidth="1" />
+      <text x="24" y="44" fontFamily="var(--font-display)" fontSize="26" fill="var(--flow)">
+        60% fewer tokens
+      </text>
+      <text x="24" y="62" fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
+        COMPRESSED VS NAIVE · SINDRESORHUS/MEOW
+      </text>
+      {CONTEXTLENS_RUN.map((r, i) => {
+        const y = 92 + i * 56;
+        const w = (r.tokens / max) * 230;
+        return (
+          <g key={r.mode}>
+            <text x="24" y={y} fontFamily="var(--font-mono)" fontSize="8.5" fill="var(--muted)">
+              {r.mode}
+            </text>
+            <rect x="24" y={y + 8} width="352" height="18" rx="3" fill="var(--panel)" stroke="var(--line)" />
+            <rect x="24" y={y + 8} width={w} height="18" rx="3" fill={r.tone} opacity="0.22" stroke={r.tone} />
+            <text x={24 + w + 8} y={y + 21} fontFamily="var(--font-mono)" fontSize="9.5" fill="var(--text)">
+              {r.tokens.toLocaleString('en-US')} tok · {r.latency}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
 
-export default function LiveDemos() {
+export default function LiveDemos({ reducedMotion }: { reducedMotion: boolean }) {
   return (
-    <section id="live" className="relative z-10 max-w-6xl mx-auto px-6 py-16">
-      <p className="mono-label text-muted mb-2">LIVE DEMOS</p>
-      <p className="text-sm text-muted mb-8 max-w-2xl">
-        Four projects deployed and reachable right now — click through to use them directly.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {LIVE_DEMOS.map((d) => (
-          <a
-            key={d.url}
-            href={d.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex flex-col bg-panel border border-line hover:border-flow transition-colors overflow-hidden"
-            style={{ borderRadius: 2 }}
-          >
-            <div className="aspect-video w-full overflow-hidden border-b border-line bg-void">
-              {d.image ? (
-                <img
-                  src={d.image}
-                  alt={`${d.name} interface`}
-                  className="w-full h-full object-cover object-top grayscale-[30%] group-hover:grayscale-0 transition-[filter]"
-                  loading="lazy"
-                />
-              ) : (
-                <ContextLensPlaceholder />
-              )}
-            </div>
-            <div className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-display text-text">{d.name}</span>
-                <span className="mono-label text-flow shrink-0">OPEN &rarr;</span>
+    <SectionShell id="live" labelledBy="live-title">
+      <div className="flex flex-col gap-8 mb-14 md:mb-20">
+        <Eyebrow>Live</Eyebrow>
+        <div className="grid gap-8 lg:grid-cols-[1fr_minmax(0,380px)] lg:items-end">
+          <SplitHeadline id="live-title" first="Shipped and" second="reachable." />
+          <p className="text-muted leading-relaxed">
+            {LIVE_DEMOS.length} projects deployed right now &mdash; click through and use them directly.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+        {LIVE_DEMOS.map((d, i) => (
+          <Reveal key={d.url} reducedMotion={reducedMotion} delay={(i % 2) * 0.06}>
+            <a
+              href={d.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col h-full rounded-xl bg-panel border border-line hover:border-line-strong transition-colors overflow-hidden"
+            >
+              <div className="p-2 pb-0">
+                <div className="aspect-video w-full overflow-hidden rounded-lg border border-line bg-void">
+                  {d.image ? (
+                    <img
+                      src={d.image}
+                      alt={`${d.name} interface`}
+                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <ContextLensPlaceholder />
+                  )}
+                </div>
               </div>
-              <p className="text-sm text-muted leading-relaxed">{d.tagline}</p>
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                {d.stack.map((s) => (
-                  <span key={s} className="mono-label text-muted">
-                    {s}
+              <div className="flex flex-col gap-3 p-5 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="display text-2xl text-text">{d.name}</span>
+                  <span className="mono-label text-muted flex items-center gap-2 shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-flow" aria-hidden="true" />
+                    live
                   </span>
-                ))}
+                </div>
+                <p className="text-sm text-muted leading-relaxed">{d.tagline}</p>
+                <div className="flex flex-wrap items-center justify-between gap-3 mt-auto pt-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {d.stack.map((s) => (
+                      <span key={s} className="tag">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="mono-label text-text group-hover:text-flow transition-colors">
+                    OPEN <span aria-hidden="true">&rarr;</span>
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </span>
+                </div>
               </div>
-            </div>
-          </a>
+            </a>
+          </Reveal>
         ))}
       </div>
-    </section>
+    </SectionShell>
   );
 }

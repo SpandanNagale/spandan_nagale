@@ -2,16 +2,23 @@ import { AnimatePresence } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ChatPanel from './ChatPanel';
 import { useReducedMotion } from '../hooks/useReducedMotion';
+import { OPEN_ASSISTANT_EVENT } from '../lib/assistant';
 
-/** Fixed launcher (bottom-right, z-40) plus the slide-in assistant panel. */
+/** Mobile launcher (bottom-right, z-40) plus the slide-in assistant panel.
+ * On desktop the navbar's "Ask about Spandan" pill is the launcher. */
 export default function AssistantDock() {
   const [open, setOpen] = useState(false);
   const reducedMotion = useReducedMotion();
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  const show = useCallback(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null;
+    setOpen(true);
+  }, []);
 
   const close = useCallback(() => {
     setOpen(false);
-    triggerRef.current?.focus();
+    returnFocusRef.current?.focus();
   }, []);
 
   // Open with Cmd/Ctrl-K, a common "command" affordance.
@@ -19,26 +26,31 @@ export default function AssistantDock() {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((v) => {
+          if (!v) returnFocusRef.current = document.activeElement as HTMLElement | null;
+          return !v;
+        });
       }
     }
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+    window.addEventListener(OPEN_ASSISTANT_EVENT, show);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener(OPEN_ASSISTANT_EVENT, show);
+    };
+  }, [show]);
 
   return (
     <>
       <button
-        ref={triggerRef}
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={show}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="fixed bottom-5 right-5 z-40 mono-label flex items-center gap-2 bg-panel border border-line text-text px-4 py-3 hover:border-flow hover:text-flow transition-colors"
-        style={{ borderRadius: 2 }}
+        className="pill fixed bottom-5 right-5 z-40 md:hidden shadow-[0_8px_24px_-12px_rgba(0,0,0,0.4)]"
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-flow" aria-hidden="true" />
-        ASK ABOUT SPANDAN
+        <span className="w-1.5 h-1.5 rounded-full bg-flow-on-ink" aria-hidden="true" />
+        Ask about Spandan
       </button>
 
       <AnimatePresence>

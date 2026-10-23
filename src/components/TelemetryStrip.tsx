@@ -32,7 +32,7 @@ export default function TelemetryStrip({ telemetry, streaming }: TelemetryStripP
           {streaming ? 'STREAMING' : t ? 'IDLE' : 'STANDBY'}
         </span>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-x-4 gap-y-3">
+      <div className="grid grid-cols-3 gap-x-4 gap-y-3">
         <Cell label="MODEL" value={t?.model ?? '--'} />
         <Cell label="TTFT" value={ms(t?.ttft_ms)} tone={t && t.ttft_ms != null && t.ttft_ms > 1500 ? 'gate' : 'flow'} />
         <Cell label="TOTAL" value={ms(t?.total_ms)} />

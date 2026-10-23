@@ -68,8 +68,7 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
         role="dialog"
         aria-modal="true"
         aria-labelledby={`modal-title-${project.id}`}
-        className="relative w-full max-w-[1000px] max-h-[90vh] overflow-y-auto bg-panel border border-line p-8 md:p-10"
-        style={{ borderRadius: 2 }}
+        className="rounded-2xl relative w-full max-w-[1000px] max-h-[90vh] overflow-y-auto bg-panel border border-line p-6 md:p-10 shadow-[0_30px_80px_-30px_rgba(10,10,10,0.35)]"
         transition={{ duration: reducedMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
       >
         <button
@@ -77,8 +76,7 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className="absolute top-6 right-6 md:top-8 md:right-8 w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors"
-          style={{ borderRadius: 2 }}
+          className="rounded-full absolute top-6 right-6 md:top-8 md:right-8 w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" />
@@ -87,7 +85,7 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
 
         <div className="flex flex-col gap-8 pr-10">
           <div className="flex flex-col gap-3">
-            <h2 id={`modal-title-${project.id}`} className="font-display text-3xl md:text-4xl text-text">
+            <h2 id={`modal-title-${project.id}`} className="display text-4xl md:text-6xl text-text">
               {project.name}
             </h2>
             <p className="text-muted text-base leading-relaxed max-w-2xl">{project.tagline}</p>
@@ -105,8 +103,8 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
             <ul className="flex flex-col gap-2">
               {project.highlights.map((h) => (
                 <li key={h} className="text-text leading-relaxed flex gap-3">
-                  <span className="text-flow mt-1 shrink-0" aria-hidden="true">
-                    &bull;
+                  <span className="text-muted shrink-0" aria-hidden="true">
+                    &mdash;
                   </span>
                   <span>{h}</span>
                 </li>
@@ -117,7 +115,7 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
           <div className="flex flex-wrap gap-x-8 gap-y-4 py-4 border-y border-line">
             {project.metrics.map((m) => (
               <div key={m.label} className="flex flex-col gap-1">
-                <span className="font-display text-2xl text-flow">{m.value}</span>
+                <span className="display text-4xl text-text">{m.value}</span>
                 <span className="mono-label text-muted">{m.label}</span>
               </div>
             ))}
@@ -130,16 +128,16 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
                 href={project.evalMethodologyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-flow hover:underline underline-offset-4"
+                className="text-text underline underline-offset-4 hover:text-flow"
               >
                 EVAL METHODOLOGY &rarr;
               </a>
             </p>
           )}
 
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
+          <div className="flex flex-wrap gap-1.5">
             {project.stack.map((item) => (
-              <span key={item} className="mono-label text-muted">
+              <span key={item} className="tag">
                 {item}
               </span>
             ))}
@@ -149,9 +147,9 @@ export default function SystemModal({ project, onClose, reducedMotion }: SystemM
             href={project.repo}
             target="_blank"
             rel="noopener noreferrer"
-            className="mono-label text-flow hover:underline underline-offset-4 w-fit"
+            className="pill w-fit"
           >
-            VIEW ON GITHUB &rarr;
+            View on GitHub <span className="arrow" aria-hidden="true">&rarr;</span>
           </a>
         </div>
       </motion.div>

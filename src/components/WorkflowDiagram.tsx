@@ -95,8 +95,7 @@ export default function WorkflowDiagram({ project, play, reducedMotion }: Workfl
           ref={expandButtonRef}
           type="button"
           onClick={() => setExpanded(true)}
-          className="mono-label text-muted hover:text-flow border border-line hover:border-flow px-2 py-1"
-          style={{ borderRadius: 2 }}
+          className="rounded-full mono-label text-muted hover:text-text border border-line hover:border-line-strong px-3 py-1.5"
         >
           EXPAND &#x2922;
         </button>
@@ -193,8 +192,7 @@ function ExpandedOverlay({
           type="button"
           aria-label="Close expanded view"
           onClick={onClose}
-          className="w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors shrink-0"
-          style={{ borderRadius: 2 }}
+          className="rounded-full w-9 h-9 flex items-center justify-center border border-line text-muted hover:text-flow hover:border-flow transition-colors shrink-0"
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.5" />
@@ -353,9 +351,8 @@ function DiagramViewport({
   return (
     <div
       ref={wrapRef}
-      className="relative w-full overflow-hidden border border-line"
+      className="relative w-full overflow-hidden rounded-xl border border-line"
       style={{
-        borderRadius: 2,
         height: heightPx ?? '100%',
         touchAction: 'none',
         cursor: needsPanZoom ? 'grab' : 'default',
@@ -370,8 +367,7 @@ function DiagramViewport({
         <button
           type="button"
           onClick={resetToFit}
-          className="absolute top-2 right-2 z-10 mono-label text-muted hover:text-flow border border-line hover:border-flow px-2 py-1 bg-panel"
-          style={{ borderRadius: 2 }}
+          className="rounded-full absolute top-2 right-2 z-10 mono-label text-muted hover:text-text border border-line hover:border-line-strong px-3 py-1.5 bg-panel"
         >
           FIT
         </button>

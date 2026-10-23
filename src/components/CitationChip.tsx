@@ -17,8 +17,8 @@ function flashCard(el: HTMLElement) {
 export default function CitationChip({ id }: CitationChipProps) {
   const target = citationTarget(id);
   const base =
-    'mono-label inline-flex items-center gap-1 border border-line px-2 py-1 text-flow ' +
-    'transition-colors hover:border-flow hover:bg-flow/5 focus-visible:border-flow';
+    'mono-label inline-flex items-center gap-1 rounded-full border border-line bg-panel px-2.5 py-1 text-text ' +
+    'transition-colors hover:border-flow hover:text-flow focus-visible:border-flow';
 
   const cardId = target.cardId;
   if (cardId) {
@@ -26,7 +26,6 @@ export default function CitationChip({ id }: CitationChipProps) {
       <button
         type="button"
         className={base}
-        style={{ borderRadius: 2 }}
         title={`Jump to ${target.label}`}
         onClick={() => {
           const el = document.getElementById(cardId);
@@ -44,14 +43,13 @@ export default function CitationChip({ id }: CitationChipProps) {
   return (
     <a
       className={base}
-      style={{ borderRadius: 2 }}
       href={target.href ?? '#'}
       target="_blank"
       rel="noopener noreferrer"
       title={`Open ${target.label}`}
     >
       {target.label}
-      <span aria-hidden="true">&nearr;</span>
+      <span aria-hidden="true">↗</span>
     </a>
   );
 }
