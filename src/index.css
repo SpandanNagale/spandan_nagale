@@ -1,34 +1,67 @@
 @import "tailwindcss";
 
-/* Self-hosted fonts */
-@import "@fontsource/space-grotesk/600.css";
-@import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource-variable/inter-tight";
+/* Self-hosted fonts (latin subsets only) */
+@import "@fontsource/instrument-sans/latin-400.css";
+@import "@fontsource/instrument-sans/latin-500.css";
+@import "@fontsource/instrument-serif/latin-400-italic.css";
+@import "@fontsource/jetbrains-mono/latin-400.css";
+@import "@fontsource/jetbrains-mono/latin-500.css";
 
+/* Token names predate the light theme (void = page bg, panel = surface);
+ * they're kept so every component reads the same semantic slots. Contrast
+ * ratios are against --void. */
 :root {
-  --void: #080b14; /* page background */
-  --panel: #0f1524; /* cards, modal surface */
-  --line: #1e2a42; /* hairlines, dot grid, idle edges */
-  --flow: #38e0d4; /* teal — data moving, active node */
-  --gate: #f5a524; /* amber — validation, human-in-the-loop */
-  --fault: #ff5d73; /* coral — retry / rejection loops ONLY */
-  --text: #e6edf7;
-  --muted: #7c8ba6;
+  --void: #fafaf8; /* page background */
+  --panel: #ffffff; /* cards, modal surface */
+  --line: #e5e5e0; /* hairlines, idle edges */
+  --line-strong: #cfcfc8; /* hover borders, scrollbar */
+  --ink: #0a0a0a; /* primary pill fill */
+  --on-ink: #fafaf8;
+  --text: #0a0a0a; /* 18.9:1 */
+  --muted: #6b6b66; /* 5.1:1 — body-size grey */
+  --dim: #8a8a85; /* 3.3:1 — large display text only (split headlines) */
+  --flow: #0f766e; /* teal, 5.2:1 — data moving, active node, live */
+  --gate: #b45309; /* amber, 4.8:1 — validation, human-in-the-loop */
+  --fault: #c2364c; /* coral, 5.1:1 — retry / rejection loops ONLY */
+}
+
+/* The one dark band. Re-points the same slots so components inside it
+ * need no special cases. */
+.band-dark {
+  --void: #0a0a0a;
+  --panel: #131313;
+  --line: #262624;
+  --line-strong: #3a3a37;
+  --ink: #fafaf8;
+  --on-ink: #0a0a0a;
+  --text: #fafaf8;
+  --muted: #a3a39e; /* 7.8:1 */
+  --dim: #6f6f6a;
+  --flow: #2dd4bf;
+  --gate: #fbbf24;
+  --fault: #fb7185;
+  background: var(--void);
+  color: var(--text);
 }
 
 @theme {
   --color-void: var(--void);
   --color-panel: var(--panel);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
   --color-flow: var(--flow);
   --color-gate: var(--gate);
   --color-fault: var(--fault);
   --color-text: var(--text);
   --color-muted: var(--muted);
+  --color-dim: var(--dim);
 
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Inter Tight Variable", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-accent: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 * {
@@ -36,7 +69,14 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
@@ -44,8 +84,10 @@ body {
   background: var(--void);
   color: var(--text);
   font-family: var(--font-body);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 #root {
@@ -53,14 +95,23 @@ body {
   min-height: 100vh;
 }
 
-.dot-grid {
+/* Very faint full-page column grid. */
+.page-grid {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
-  background-size: 32px 32px;
-  opacity: 0.04;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--line) 35%, transparent) 1px, transparent 1px);
+  background-size: 96px 96px;
+  background-position: center top;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.dot-texture {
+  background-image: radial-gradient(circle, var(--line-strong) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
 .mono-label {
@@ -71,7 +122,170 @@ body {
   text-transform: uppercase;
 }
 
-/* Brief highlight when a citation chip scrolls its project card into view. */
+/* —— Eyebrow label */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+  line-height: 0.95;
+}
+
+.accent {
+  font-family: var(--font-accent);
+  font-style: italic;
+  letter-spacing: -0.01em;
+}
+
+/* Outline-only word. Falls back to solid text where stroke is unsupported. */
+.text-outline {
+  color: var(--text);
+}
+
+@supports (-webkit-text-stroke: 1px black) {
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 1.25px var(--text);
+  }
+}
+
+/* Pills */
+.pill,
+.pill-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.85rem 1.35rem;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+  white-space: nowrap;
+}
+
+.pill {
+  background: var(--ink);
+  color: var(--on-ink);
+  border: 1px solid var(--ink);
+}
+
+.pill:hover {
+  background: color-mix(in srgb, var(--ink) 82%, var(--void));
+}
+
+.pill-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+}
+
+.pill-outline:hover {
+  border-color: var(--text);
+}
+
+.pill .arrow,
+.pill-outline .arrow {
+  transition: transform 0.15s;
+}
+
+.pill:hover .arrow,
+.pill-outline:hover .arrow {
+  transform: translateX(2px);
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 9999px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* Marquee — duplicated track translated by half its width. */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  flex-shrink: 0;
+  min-width: max-content;
+  animation: marquee var(--marquee-duration, 40s) linear infinite;
+}
+
+.marquee-reverse .marquee-track {
+  animation-direction: reverse;
+}
+
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    flex-wrap: wrap;
+    mask-image: none;
+  }
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .marquee-dup {
+    display: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Brief highlight when a citation chip scrolls its project row into view. */
 .citation-flash {
   animation: citation-flash 1.4s ease-out;
 }
@@ -80,17 +294,15 @@ body {
   0%,
   100% {
     box-shadow: 0 0 0 0 transparent;
-    border-color: var(--line);
   }
   15% {
     box-shadow: 0 0 0 2px var(--flow);
-    border-color: var(--flow);
   }
 }
 
 ::selection {
-  background: var(--flow);
-  color: var(--void);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 :focus-visible {
