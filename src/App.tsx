@@ -1,6 +1,6 @@
 import { AnimatePresence } from 'framer-motion';
 import { useCallback, useRef, useState } from 'react';
-import AgentCanvas from './components/AgentCanvas';
+import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import SystemGrid from './components/SystemGrid';
 import SystemModal from './components/SystemModal';
@@ -31,10 +31,10 @@ function App() {
 
   return (
     <>
-      <div className="dot-grid" />
-      <AgentCanvas activeProject={activeProject} />
+      <div className="page-grid" aria-hidden="true" />
+      <Navbar />
 
-      <main className="relative">
+      <main id="top" className="relative">
         <Hero />
         <SystemGrid projects={projects} onOpen={openProject} reducedMotion={reducedMotion} />
         <LiveDemos />

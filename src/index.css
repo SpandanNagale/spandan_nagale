@@ -23,6 +23,7 @@
   --flow: #0f766e; /* teal, 5.2:1 — data moving, active node, live */
   --gate: #b45309; /* amber, 4.8:1 — validation, human-in-the-loop */
   --fault: #c2364c; /* coral, 5.1:1 — retry / rejection loops ONLY */
+  --flow-on-ink: #2dd4bf; /* status dot sitting on an --ink pill */
 }
 
 /* The one dark band. Re-points the same slots so components inside it
@@ -40,6 +41,7 @@
   --flow: #2dd4bf;
   --gate: #fbbf24;
   --fault: #fb7185;
+  --flow-on-ink: #0f766e;
   background: var(--void);
   color: var(--text);
 }
@@ -52,6 +54,7 @@
   --color-ink: var(--ink);
   --color-on-ink: var(--on-ink);
   --color-flow: var(--flow);
+  --color-flow-on-ink: var(--flow-on-ink);
   --color-gate: var(--gate);
   --color-fault: var(--fault);
   --color-text: var(--text);
@@ -114,6 +117,7 @@ body {
   background-size: 16px 16px;
 }
 
+@layer components {
 .mono-label {
   font-family: var(--font-mono);
   font-weight: 500;
@@ -271,6 +275,7 @@ body {
   .marquee-dup {
     display: none;
   }
+}
 }
 
 .sr-only {
