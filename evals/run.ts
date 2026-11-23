@@ -17,6 +17,7 @@ import { EvalSuiteSchema, type EvalCase } from './schema.ts';
 import { hasEffectiveCheck, runAssertions, type CheckResult } from './assertions.ts';
 import { ask } from './client.ts';
 import { judge } from './judge.ts';
+import { configuredProviders, modelFor } from '../api/_lib/llm.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 loadEnv({ path: resolve(ROOT, '.env.local') });
@@ -29,7 +30,6 @@ const JUDGE_ENABLED = !process.argv.includes('--no-judge') && process.env.EVAL_J
 const STRICT_JUDGE =
   process.argv.includes('--strict-judge') || process.env.EVAL_STRICT_JUDGE === '1';
 const FILTER = argValue('--filter');
-const MODEL = process.env.EVAL_JUDGE_MODEL ?? process.env.OLLAMA_MODEL ?? 'gpt-oss:120b';
 
 function argValue(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
@@ -46,7 +46,7 @@ interface CaseOutcome {
   fatal?: string;
 }
 
-async function runCase(baseUrl: string, apiKey: string, c: EvalCase): Promise<CaseOutcome> {
+async function runCase(baseUrl: string, c: EvalCase): Promise<CaseOutcome> {
   const turns = [...c.history, { role: 'user' as const, content: c.question }];
   const mode = c.category === 'grounded' && c.question.length > 4000 ? 'jd' : 'chat';
 
@@ -67,7 +67,7 @@ async function runCase(baseUrl: string, apiKey: string, c: EvalCase): Promise<Ca
     let judgeVerdict: CaseOutcome['judge'];
     if (JUDGE_ENABLED && c.rubric) {
       try {
-        judgeVerdict = await judge(apiKey, MODEL, c.question, c.rubric, answer);
+        judgeVerdict = await judge(c.question, c.rubric, answer);
       } catch (err) {
         judgeVerdict = {
           pass: false,
@@ -144,11 +144,14 @@ async function main() {
     process.exit(1);
   }
 
-  const apiKey = process.env.OLLAMA_API_KEY;
-  if (!apiKey) {
-    console.error('OLLAMA_API_KEY is not set (needed for the assistant and the judge).');
+  const providers = configuredProviders();
+  if (providers.length === 0) {
+    console.error(
+      'No LLM key set (GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OLLAMA_API_KEY) — needed for the assistant and the judge.',
+    );
     process.exit(1);
   }
+  const MODEL = `${providers[0]}:${modelFor(providers[0])}`;
 
   let baseUrl = process.env.EVAL_TARGET_URL ?? '';
   let stop: (() => Promise<void>) | null = null;
@@ -170,7 +173,7 @@ async function main() {
   const started = Date.now();
   let outcomes: CaseOutcome[];
   try {
-    outcomes = await pool(cases, CONCURRENCY, (c) => runCase(baseUrl, apiKey, c));
+    outcomes = await pool(cases, CONCURRENCY, (c) => runCase(baseUrl, c));
   } finally {
     if (stop) await stop();
   }

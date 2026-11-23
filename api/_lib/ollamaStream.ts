@@ -33,6 +33,7 @@ export async function openOllamaStream(
   apiKey: string,
   signal: AbortSignal,
   numPredict: number = MAX_OUTPUT_TOKENS,
+  model: string = OLLAMA_MODEL,
 ): Promise<ReadableStream<Uint8Array>> {
   const res = await fetch(OLLAMA_URL, {
     method: 'POST',
@@ -41,7 +42,7 @@ export async function openOllamaStream(
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: OLLAMA_MODEL,
+      model,
       messages,
       stream: true,
       // Grounded factual Q&A — no chain-of-thought wanted. Reasoning models

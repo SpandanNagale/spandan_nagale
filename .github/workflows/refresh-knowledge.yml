@@ -51,8 +51,15 @@ jobs:
       # here to drop the judge calls entirely.
       - name: Eval suite (grounding gate)
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
           OLLAMA_MODEL: ${{ vars.OLLAMA_MODEL }}
+          LLM_PROVIDERS: ${{ vars.LLM_PROVIDERS }}
         run: npm run eval
 
       - name: Commit knowledge.json if corpus_version changed

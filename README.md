@@ -50,13 +50,19 @@ before.
 Server-Sent Events response: `token`, `citation`, `telemetry`, `done`, `error`.
 It loads the whole `knowledge.json` corpus into the system message (static
 prompt prefix first — see `api/_lib/systemPrompt.ts`, the public system
-prompt), then streams from Ollama Cloud's `/api/chat`. The client-visible
+prompt), then streams from the first configured LLM provider (`api/_lib/llm.ts`). The client-visible
 system prompt is committed on purpose; there are no prompt-secrecy defenses.
 
-- **Provider:** Ollama Cloud. Model in `OLLAMA_MODEL` (default `gpt-oss:120b`).
-  Requires `OLLAMA_API_KEY`.
-- **Prompt caching:** Ollama Cloud *does* report it — `prompt_eval_cached_count`
-  in the final stream chunk — surfaced in the `telemetry` event as
+- **Providers:** Gemini → Groq → OpenRouter → Ollama Cloud. Every provider
+  with a key set (`GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`,
+  `OLLAMA_API_KEY`) is tried in that order; if one refuses the request (bad
+  key, out of credit, rate limit) the next is used. Override the order with
+  `LLM_PROVIDERS` and the models with `GEMINI_MODEL` (default
+  `gemini-flash-latest`), `GROQ_MODEL` / `OPENROUTER_MODEL` (default
+  `openai/gpt-oss-120b`), `OLLAMA_MODEL` (default `gpt-oss:120b`). The
+  `telemetry` event reports which `provider` and `model` answered.
+- **Prompt caching:** reported when the provider returns it (Ollama Cloud's
+  `prompt_eval_cached_count`, OpenAI-style `prompt_tokens_details.cached_tokens`) — surfaced in the `telemetry` event as
   `cache: hit|miss` and `cached_tokens_in`. After the first request the ~44K-token
   corpus prefix is fully cached (`cached_tokens_in ≈ 44432`).
 - **TTFT:** ~2.2–2.9s warm in testing — above the 1.5s aspiration, dominated by
@@ -130,7 +136,8 @@ requires ≥1 citation) — a flaky hard check would red the daily refresh.
 `npm run eval` exits non-zero on any failure (or on a case with no effective
 check), so it gates CI: the daily `refresh-knowledge` workflow runs it
 against the freshly built corpus before committing or deploying, so a
-grounding regression blocks the release. Needs `OLLAMA_API_KEY`; set
+grounding regression blocks the release. Needs at least one provider key
+(same fallback chain as the assistant); set
 `EVAL_JUDGE=0` to skip the judge, `EVAL_CONCURRENCY` to tune throughput.
 
 ### Refusal log
