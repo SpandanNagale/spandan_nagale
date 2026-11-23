@@ -4,7 +4,7 @@
 // "the judge was down so we passed" is exactly the dishonesty this suite
 // exists to catch.
 
-const OLLAMA_URL = 'https://ollama.com/api/chat';
+import { completeChat } from '../api/_lib/llm.ts';
 
 export interface JudgeVerdict {
   pass: boolean;
@@ -38,37 +38,22 @@ or expects a decline, and answers that quote a false premise in order to deny
 it.`;
 
 export async function judge(
-  apiKey: string,
-  model: string,
   question: string,
   rubric: string,
   answer: string,
 ): Promise<JudgeVerdict> {
-  const res = await fetch(OLLAMA_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model,
-      stream: false,
-      think: false,
-      // gpt-oss spends output budget "thinking" before it writes the object;
-      // 400 was not enough and came back empty.
-      options: { num_predict: 1500, temperature: 0 },
-      messages: [
-        { role: 'system', content: JUDGE_SYSTEM },
-        {
-          role: 'user',
-          content: `QUESTION:\n${question}\n\nRUBRIC:\n${rubric}\n\nANSWER:\n${answer}`,
-        },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`judge HTTP ${res.status}: ${(await res.text().catch(() => '')).slice(0, 200)}`);
-  }
-  const body = (await res.json()) as { message?: { content?: string } };
-  const text = body.message?.content ?? '';
+  // Same provider fallback chain as the assistant (api/_lib/llm.ts). Reasoning
+  // models spend output budget "thinking" before the object; 400 was not enough.
+  const { text } = await completeChat(
+    [
+      { role: 'system', content: JUDGE_SYSTEM },
+      {
+        role: 'user',
+        content: `QUESTION:\n${question}\n\nRUBRIC:\n${rubric}\n\nANSWER:\n${answer}`,
+      },
+    ],
+    1500,
+  );
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) throw new Error(`judge returned no JSON: ${text.slice(0, 200)}`);
 

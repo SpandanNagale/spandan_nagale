@@ -5,19 +5,16 @@ import {
   CORPUS_TOKEN_ESTIMATE,
 } from './_lib/assembleMessages';
 import { checkRateLimit } from './_lib/ratelimit';
-import {
-  openOllamaStream,
-  parseNdjson,
-  OLLAMA_MODEL,
-  MAX_OUTPUT_TOKENS,
-  JD_MAX_OUTPUT_TOKENS,
-} from './_lib/ollamaStream';
+import { MAX_OUTPUT_TOKENS, JD_MAX_OUTPUT_TOKENS } from './_lib/ollamaStream';
+import { openChatStream, configuredProviders, type OpenedStream } from './_lib/llm';
 import { sse, extractCitations } from './_lib/sse';
 import { looksLikeRefusal, logRefusal } from './_lib/refusalLog';
 
 export const config = { runtime: 'edge' };
 
-const CONTEXT_WINDOW = Number(process.env.OLLAMA_CONTEXT_WINDOW ?? 128000);
+const CONTEXT_WINDOW = Number(
+  process.env.LLM_CONTEXT_WINDOW ?? process.env.OLLAMA_CONTEXT_WINDOW ?? 128000,
+);
 
 // Shown to visitors whenever the model backend (or anything else server-side)
 // fails. The real error goes to the function logs, never to the browser.
@@ -52,9 +49,10 @@ export default async function handler(req: Request): Promise<Response> {
 async function handle(req: Request): Promise<Response> {
   if (req.method !== 'POST') return jsonError('Method not allowed.', 405);
 
-  const apiKey = process.env.OLLAMA_API_KEY;
-  if (!apiKey) {
-    console.error('[api/chat] OLLAMA_API_KEY is not set');
+  if (configuredProviders().length === 0) {
+    console.error(
+      '[api/chat] no LLM key set (GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY / OLLAMA_API_KEY)',
+    );
     return jsonError(UNAVAILABLE_MESSAGE, 503);
   }
 
@@ -81,11 +79,10 @@ async function handle(req: Request): Promise<Response> {
   // Vercel edge functions must start responding within 25s; give up on a
   // hung upstream well before that.
   const connectTimeout = setTimeout(() => abort.abort(), CONNECT_TIMEOUT_MS);
-  let body: ReadableStream<Uint8Array>;
+  let upstream: OpenedStream;
   try {
-    body = await openOllamaStream(
+    upstream = await openChatStream(
       assembleMessages(messages, mode),
-      apiKey,
       abort.signal,
       mode === 'jd' ? JD_MAX_OUTPUT_TOKENS : MAX_OUTPUT_TOKENS,
     );
@@ -107,13 +104,14 @@ async function handle(req: Request): Promise<Response> {
       const emitted = new Set<string>();
 
       try {
-        for await (const chunk of parseNdjson(body)) {
-          const delta = chunk.message?.content ?? '';
-          if (delta) {
+        for await (const ev of upstream.events) {
+          if (ev.type === 'delta') {
+            const delta = ev.text;
             if (ttftMs === 0) {
               ttftMs = Date.now() - requestStart;
               send('telemetry', {
-                model: OLLAMA_MODEL,
+                model: upstream.model,
+                provider: upstream.provider,
                 ttft_ms: ttftMs,
                 corpus_tokens: CORPUS_TOKEN_ESTIMATE,
                 corpus_version: CORPUS_VERSION,
@@ -130,12 +128,11 @@ async function handle(req: Request): Promise<Response> {
             }
           }
 
-          if (chunk.done) {
-            const tokensIn = chunk.prompt_eval_count ?? null;
-            const tokensOut = chunk.eval_count ?? null;
-            const cachedIn = chunk.prompt_eval_cached_count ?? null;
+          if (ev.type === 'done') {
+            const { tokensIn, tokensOut, cachedIn, totalMs } = ev.usage;
             send('telemetry', {
-              model: OLLAMA_MODEL,
+              model: upstream.model,
+              provider: upstream.provider,
               ttft_ms: ttftMs,
               tokens_in: tokensIn,
               tokens_out: tokensOut,
@@ -148,7 +145,7 @@ async function handle(req: Request): Promise<Response> {
                 tokensIn != null && tokensOut != null
                   ? Math.round(((tokensIn + tokensOut) / CONTEXT_WINDOW) * 100)
                   : null,
-              total_ms: chunk.total_duration ? Math.round(chunk.total_duration / 1e6) : null,
+              total_ms: totalMs,
             });
           }
         }
